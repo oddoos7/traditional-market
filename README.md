@@ -42,6 +42,29 @@ cd backend
 
 백엔드가 실행되면 `GET http://localhost:8080/api/health`에서 연결 상태를 확인할 수 있습니다.
 
+### 데이터베이스
+
+기본 실행은 별도 설치가 필요 없는 H2 인메모리 DB와 `local` 프로필을 사용합니다. 서버 실행 후 H2 콘솔은 `http://localhost:8080/h2-console`에서 확인할 수 있습니다.
+
+```text
+JDBC URL: jdbc:h2:mem:traditional_market
+User Name: sa
+Password: 입력하지 않음
+```
+
+MySQL을 사용할 때는 `traditional_market` 데이터베이스를 만든 뒤 환경변수를 설정하고 `mysql` 프로필로 실행합니다.
+
+PowerShell:
+
+```powershell
+$env:DB_URL = 'jdbc:mysql://localhost:3306/traditional_market?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8'
+$env:DB_USERNAME = 'root'
+$env:DB_PASSWORD = '비밀번호'
+./gradlew.bat bootRun --args='--spring.profiles.active=mysql'
+```
+
+현재 Market 테이블 설계는 [`docs/erd.md`](docs/erd.md)에서 확인할 수 있습니다.
+
 ## 빌드 및 테스트
 
 ```bash
