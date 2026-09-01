@@ -81,6 +81,14 @@ GET /api/markets?keyword=시장&status=OPEN&page=0&size=12&sort=LATEST
 
 `local` 프로필에서는 API 확인을 위한 샘플 시장 데이터 3건이 자동으로 등록됩니다.
 
+### 시장 상세 조회 API
+
+```http
+GET /api/markets/{marketId}
+```
+
+존재하는 시장은 주소, 연락처, 영업시간, 휴무일, 좌표, 운영 상태와 생성·수정 시간을 포함한 상세 정보를 반환합니다. 존재하지 않는 ID는 `MARKET_NOT_FOUND` 코드와 함께 HTTP 404를 반환합니다.
+
 ## 빌드 및 테스트
 
 ```bash

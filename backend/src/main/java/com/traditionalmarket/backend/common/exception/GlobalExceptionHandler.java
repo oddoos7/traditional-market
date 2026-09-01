@@ -8,11 +8,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.traditionalmarket.backend.common.response.ApiErrorResponse;
+import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
 
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MarketNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleMarketNotFound(
+            MarketNotFoundException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("MARKET_NOT_FOUND", exception.getMessage()));
+    }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(

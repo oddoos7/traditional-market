@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.traditionalmarket.backend.market.domain.Market;
 import com.traditionalmarket.backend.market.domain.MarketStatus;
+import com.traditionalmarket.backend.market.dto.response.MarketDetailResponse;
 import com.traditionalmarket.backend.market.dto.response.MarketPageResponse;
+import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
 import com.traditionalmarket.backend.market.repository.MarketRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,13 @@ public class MarketQueryService {
         Page<Market> markets = marketRepository.findMarkets(normalizedKeyword, status, pageRequest);
 
         return MarketPageResponse.from(markets);
+    }
+
+    public MarketDetailResponse findMarket(Long marketId) {
+        Market market = marketRepository.findById(marketId)
+                .orElseThrow(() -> new MarketNotFoundException(marketId));
+
+        return MarketDetailResponse.from(market);
     }
 
     private String normalizeKeyword(String keyword) {
