@@ -65,6 +65,22 @@ $env:DB_PASSWORD = '비밀번호'
 
 현재 Market 테이블 설계는 [`docs/erd.md`](docs/erd.md)에서 확인할 수 있습니다.
 
+### 시장 목록 API
+
+```http
+GET /api/markets?keyword=시장&status=OPEN&page=0&size=12&sort=LATEST
+```
+
+| 파라미터 | 필수 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `keyword` | 아니요 | 없음 | 시장명 또는 주소 검색 |
+| `status` | 아니요 | 없음 | `OPEN`, `TEMPORARILY_CLOSED`, `CLOSED` |
+| `page` | 아니요 | `0` | 0부터 시작하는 페이지 번호 |
+| `size` | 아니요 | `12` | 페이지 크기, 최대 50 |
+| `sort` | 아니요 | `LATEST` | `LATEST` 또는 `NAME` |
+
+`local` 프로필에서는 API 확인을 위한 샘플 시장 데이터 3건이 자동으로 등록됩니다.
+
 ## 빌드 및 테스트
 
 ```bash
