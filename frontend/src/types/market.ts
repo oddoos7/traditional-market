@@ -17,6 +17,10 @@ export interface Market {
   createdAt: string
 }
 
+export interface MarketDetail extends Market {
+  updatedAt: string
+}
+
 export interface MarketPage {
   content: Market[]
   page: number
