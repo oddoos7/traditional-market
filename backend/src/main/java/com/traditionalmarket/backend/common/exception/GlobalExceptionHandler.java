@@ -2,6 +2,7 @@ package com.traditionalmarket.backend.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -52,6 +53,11 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception
     ) {
         return badRequest(exception.getName() + " 값이 올바르지 않습니다.");
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable() {
+        return badRequest("요청 본문의 형식 또는 값이 올바르지 않습니다.");
     }
 
     private ResponseEntity<ApiErrorResponse> badRequest(String message) {

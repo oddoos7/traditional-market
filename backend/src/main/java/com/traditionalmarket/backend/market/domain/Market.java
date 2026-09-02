@@ -83,21 +83,54 @@ public class Market extends BaseTimeEntity {
             MarketStatus status
     ) {
         this.name = requireText(name, "시장명");
-        this.description = description;
+        this.description = normalizeNullable(description);
         this.address = requireText(address, "주소");
-        this.detailAddress = detailAddress;
-        this.phone = phone;
-        this.openingHours = openingHours;
-        this.closedDays = closedDays;
+        this.detailAddress = normalizeNullable(detailAddress);
+        this.phone = normalizeNullable(phone);
+        this.openingHours = normalizeNullable(openingHours);
+        this.closedDays = normalizeNullable(closedDays);
         this.latitude = latitude;
         this.longitude = longitude;
-        this.imageUrl = imageUrl;
+        this.imageUrl = normalizeNullable(imageUrl);
+        this.status = status == null ? MarketStatus.OPEN : status;
+    }
+
+    public void update(
+            String name,
+            String description,
+            String address,
+            String detailAddress,
+            String phone,
+            String openingHours,
+            String closedDays,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String imageUrl,
+            MarketStatus status
+    ) {
+        this.name = requireText(name, "시장명");
+        this.description = normalizeNullable(description);
+        this.address = requireText(address, "주소");
+        this.detailAddress = normalizeNullable(detailAddress);
+        this.phone = normalizeNullable(phone);
+        this.openingHours = normalizeNullable(openingHours);
+        this.closedDays = normalizeNullable(closedDays);
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.imageUrl = normalizeNullable(imageUrl);
         this.status = status == null ? MarketStatus.OPEN : status;
     }
 
     private static String requireText(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + "은(는) 필수입니다.");
+        }
+        return value.trim();
+    }
+
+    private static String normalizeNullable(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
         }
         return value.trim();
     }
