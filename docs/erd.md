@@ -38,6 +38,16 @@ erDiagram
         DATETIME created_at "생성일시"
         DATETIME updated_at "수정일시"
     }
+
+    USERS {
+        BIGINT id PK
+        VARCHAR_255 email UK "로그인 이메일, 필수"
+        VARCHAR_100 password_hash "BCrypt 비밀번호 해시, 필수"
+        VARCHAR_50 name "회원 이름, 필수"
+        VARCHAR_20 role "USER, ADMIN"
+        DATETIME created_at "가입일시"
+        DATETIME updated_at "수정일시"
+    }
 ```
 
 ## 설계 기준
@@ -50,3 +60,6 @@ erDiagram
 - 점포는 반드시 하나의 시장에 소속되며 `fk_stores_market` 외래키로 무결성을 보장합니다.
 - 점포 카테고리는 `AGRICULTURAL`, `FOOD`, `SEAFOOD`, `LIVESTOCK`, `RESTAURANT`, `CLOTHING`, `HOUSEHOLD`, `ETC`로 관리합니다.
 - 시장별 점포 조회를 위해 `market_id`와 점포명·카테고리·운영 상태 조합에 인덱스를 생성합니다.
+- 회원 이메일은 소문자로 정규화하고 `uk_users_email` 유일 제약으로 중복 가입을 방지합니다.
+- 비밀번호 원문은 저장하지 않고 BCrypt 단방향 해시만 `password_hash`에 저장합니다.
+- 회원 권한은 기본 `USER`로 생성되며 이후 관리자 기능에서 `ADMIN`을 사용할 수 있습니다.

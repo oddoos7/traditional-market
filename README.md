@@ -107,6 +107,44 @@ GET /api/markets/{marketId}/stores?keyword=수산&category=SEAFOOD&status=OPEN&p
 
 존재하지 않는 시장 ID는 `MARKET_NOT_FOUND` 코드와 함께 HTTP 404를 반환합니다. `local` 프로필에서는 목록 API 확인을 위한 샘플 점포 데이터 6건이 자동 등록됩니다.
 
+### 회원가입·로그인 API
+
+인증은 `JSESSIONID` HttpOnly 쿠키를 사용하는 서버 세션 방식이며, 비밀번호는 BCrypt로 암호화하여 저장합니다. 세션 유효시간은 30분입니다.
+
+```http
+GET  /api/auth/csrf
+POST /api/auth/signup
+POST /api/auth/login
+GET  /api/auth/me
+POST /api/auth/logout
+```
+
+회원가입 요청:
+
+```json
+{
+  "email": "member@example.com",
+  "password": "password123",
+  "name": "시장사랑"
+}
+```
+
+로그인 요청:
+
+```json
+{
+  "email": "member@example.com",
+  "password": "password123"
+}
+```
+
+`POST`, `PUT` 같은 데이터 변경 요청 전에는 `GET /api/auth/csrf`를 호출하고, 응답의 `token` 값을 응답에 포함된 `headerName` 헤더로 전달해야 합니다. 로그인과 로그아웃 후에는 CSRF 토큰을 다시 요청하는 것을 권장합니다. 브라우저 요청에는 세션 쿠키 전달을 위해 `credentials: 'include'`를 사용합니다.
+
+- 중복 이메일: HTTP 409, `EMAIL_ALREADY_EXISTS`
+- 잘못된 로그인 정보: HTTP 401, `INVALID_CREDENTIALS`
+- 인증되지 않은 사용자: HTTP 401, `AUTHENTICATION_REQUIRED`
+- 누락되거나 잘못된 CSRF 토큰: HTTP 403, `ACCESS_DENIED`
+
 ## 빌드 및 테스트
 
 ```bash

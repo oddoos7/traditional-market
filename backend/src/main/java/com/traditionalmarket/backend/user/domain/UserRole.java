@@ -1,0 +1,6 @@
+package com.traditionalmarket.backend.user.domain;
+
+public enum UserRole {
+    USER,
+    ADMIN
+}

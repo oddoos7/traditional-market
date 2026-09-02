@@ -3,6 +3,7 @@ package com.traditionalmarket.backend.common.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,11 +11,29 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.traditionalmarket.backend.common.response.ApiErrorResponse;
 import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
+import com.traditionalmarket.backend.user.exception.DuplicateEmailException;
 
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateEmail(
+            DuplicateEmailException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("EMAIL_ALREADY_EXISTS", exception.getMessage()));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthenticationException() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiErrorResponse(
+                        "INVALID_CREDENTIALS",
+                        "이메일 또는 비밀번호가 올바르지 않습니다."
+                ));
+    }
 
     @ExceptionHandler(MarketNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleMarketNotFound(
