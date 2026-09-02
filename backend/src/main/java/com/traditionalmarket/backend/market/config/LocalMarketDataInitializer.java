@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 
 import com.traditionalmarket.backend.market.domain.Market;
 import com.traditionalmarket.backend.market.domain.MarketStatus;
@@ -17,6 +18,7 @@ import com.traditionalmarket.backend.market.repository.MarketRepository;
 public class LocalMarketDataInitializer {
 
     @Bean
+    @Order(1)
     CommandLineRunner initializeLocalMarkets(MarketRepository marketRepository) {
         return args -> {
             if (marketRepository.count() > 0) {

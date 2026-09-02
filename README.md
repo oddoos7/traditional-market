@@ -89,6 +89,24 @@ GET /api/markets/{marketId}
 
 존재하는 시장은 주소, 연락처, 영업시간, 휴무일, 좌표, 운영 상태와 생성·수정 시간을 포함한 상세 정보를 반환합니다. 존재하지 않는 ID는 `MARKET_NOT_FOUND` 코드와 함께 HTTP 404를 반환합니다.
 
+### 시장별 점포 목록 API
+
+```http
+GET /api/markets/{marketId}/stores?keyword=수산&category=SEAFOOD&status=OPEN&page=0&size=12&sort=LATEST
+```
+
+| 파라미터 | 필수 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `marketId` | 예 | 없음 | 점포가 소속된 시장 ID |
+| `keyword` | 아니요 | 없음 | 점포명 또는 점포 소개 검색 |
+| `category` | 아니요 | 없음 | `AGRICULTURAL`, `FOOD`, `SEAFOOD`, `LIVESTOCK`, `RESTAURANT`, `CLOTHING`, `HOUSEHOLD`, `ETC` |
+| `status` | 아니요 | 없음 | `OPEN`, `TEMPORARILY_CLOSED`, `CLOSED` |
+| `page` | 아니요 | `0` | 0부터 시작하는 페이지 번호 |
+| `size` | 아니요 | `12` | 페이지 크기, 최대 50 |
+| `sort` | 아니요 | `LATEST` | `LATEST` 또는 `NAME` |
+
+존재하지 않는 시장 ID는 `MARKET_NOT_FOUND` 코드와 함께 HTTP 404를 반환합니다. `local` 프로필에서는 목록 API 확인을 위한 샘플 점포 데이터 6건이 자동 등록됩니다.
+
 ## 빌드 및 테스트
 
 ```bash
