@@ -4,6 +4,9 @@ import {
   CalendarDays,
   Clock3,
   Info,
+  LoaderCircle,
+  LogIn,
+  LogOut,
   MapPin,
   Phone,
   RefreshCw,
@@ -12,11 +15,23 @@ import {
   SearchX,
   SlidersHorizontal,
   Store,
+  UserPlus,
 } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Dispatch, FormEvent, SetStateAction, useEffect, useState } from 'react'
-import { Link, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { Dispatch, FormEvent, ReactNode, SetStateAction, useEffect, useState } from 'react'
+import {
+  Link,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useParams,
+} from 'react-router-dom'
 import { getMarket, getMarkets, MarketApiError } from './api/marketApi'
+import { useAuth } from './auth/AuthContext'
+import { LoginPage } from './pages/LoginPage'
+import { SignupPage } from './pages/SignupPage'
 import type {
   Market,
   MarketDetail,
@@ -59,6 +74,14 @@ function App() {
           )}
         />
         <Route path="markets/:marketId" element={<MarketDetailPage />} />
+        <Route
+          path="login"
+          element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>}
+        />
+        <Route
+          path="signup"
+          element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>}
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
@@ -67,10 +90,24 @@ function App() {
 
 function SiteLayout() {
   const { pathname } = useLocation()
+  const { user, isCheckingAuth, isLoggingOut, logoutUser } = useAuth()
+  const [logoutError, setLogoutError] = useState('')
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
+    setLogoutError('')
+    if (pathname === '/') document.title = '우리동네 전통시장'
   }, [pathname])
+
+  const handleLogout = async () => {
+    setLogoutError('')
+
+    try {
+      await logoutUser()
+    } catch {
+      setLogoutError('로그아웃하지 못했습니다. 다시 시도해주세요.')
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -85,11 +122,49 @@ function SiteLayout() {
               <small>전통시장</small>
             </span>
           </Link>
-          <div className="header-note">
-            <span className="live-dot" aria-hidden="true" />
-            우리 동네의 정겨운 시장을 찾아보세요
+          <div className="header-actions">
+            {isCheckingAuth ? (
+              <span className="header-auth-loading" aria-label="로그인 상태 확인 중">
+                <LoaderCircle className="spin" size={18} aria-hidden="true" />
+              </span>
+            ) : user ? (
+              <>
+                <div className="header-user">
+                  <span className="header-avatar" aria-hidden="true">
+                    {user.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span>
+                    <strong>{user.name}</strong>
+                    <small>{user.role === 'ADMIN' ? '관리자' : '일반 회원'}</small>
+                  </span>
+                </div>
+                <button
+                  className="header-logout"
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut
+                    ? <LoaderCircle className="spin" size={16} aria-hidden="true" />
+                    : <LogOut size={16} aria-hidden="true" />}
+                  <span>{isLoggingOut ? '처리 중' : '로그아웃'}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className="header-login" to="/login">
+                  <LogIn size={16} aria-hidden="true" />
+                  로그인
+                </Link>
+                <Link className="header-signup" to="/signup">
+                  <UserPlus size={16} aria-hidden="true" />
+                  회원가입
+                </Link>
+              </>
+            )}
           </div>
         </div>
+        {logoutError && <p className="header-error" role="alert">{logoutError}</p>}
       </header>
 
       <Outlet />
@@ -99,6 +174,20 @@ function SiteLayout() {
       </footer>
     </div>
   )
+}
+
+function PublicOnlyRoute({ children }: { children: ReactNode }) {
+  const { user, isCheckingAuth } = useAuth()
+
+  if (isCheckingAuth) {
+    return (
+      <main className="auth-route-loading" aria-label="로그인 상태를 확인하는 중">
+        <LoaderCircle className="spin" size={28} aria-hidden="true" />
+      </main>
+    )
+  }
+
+  return user ? <Navigate to="/" replace /> : children
 }
 
 interface MarketListPageProps {
