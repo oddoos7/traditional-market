@@ -14,6 +14,7 @@ import { useEffect } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { getStore, StoreApiError } from '../api/storeApi'
 import { useAuth } from '../auth/AuthContext'
+import { FavoriteButton } from '../components/FavoriteButton'
 import { STORE_CATEGORY_LABELS, STORE_STATUS_LABELS } from '../constants/store'
 import type { StoreDetail } from '../types/store'
 
@@ -106,6 +107,7 @@ function StoreDetailContent({ store }: { store: StoreDetail }) {
             {store.description || '점포에 대한 자세한 소개가 곧 등록될 예정입니다.'}
           </p>
           <div className="store-detail-actions">
+            <FavoriteButton storeId={store.id} />
             {store.phone && (
               <a className="primary-action" href={`tel:${store.phone}`}>
                 <Phone size={18} aria-hidden="true" />

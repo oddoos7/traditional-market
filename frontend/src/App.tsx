@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Clock3,
   Info,
+  Heart,
   LoaderCircle,
   LogIn,
   LogOut,
@@ -32,12 +33,14 @@ import {
 import { getMarket, getMarkets, MarketApiError } from './api/marketApi'
 import { useAuth } from './auth/AuthContext'
 import { AdminRoute } from './auth/AdminRoute'
+import { RequireAuthRoute } from './auth/RequireAuthRoute'
 import { AdminPage } from './pages/AdminPage'
 import { MarketStoreSection } from './components/MarketStoreSection'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { StoreDetailPage } from './pages/StoreDetailPage'
 import { StoreFormPage } from './pages/StoreFormPage'
+import { FavoritesPage } from './pages/FavoritesPage'
 import type {
   Market,
   MarketDetail,
@@ -81,6 +84,10 @@ function App() {
         />
         <Route path="markets/:marketId" element={<MarketDetailPage />} />
         <Route path="markets/:marketId/stores/:storeId" element={<StoreDetailPage />} />
+        <Route
+          path="favorites"
+          element={<RequireAuthRoute><FavoritesPage /></RequireAuthRoute>}
+        />
         <Route
           path="login"
           element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>}
@@ -148,6 +155,10 @@ function SiteLayout() {
               </span>
             ) : user ? (
               <>
+                <Link className="header-favorites" to="/favorites">
+                  <Heart size={16} aria-hidden="true" />
+                  <span>찜한 점포</span>
+                </Link>
                 {user.role === 'ADMIN' && (
                   <Link className="header-admin" to="/admin">
                     <ShieldCheck size={16} aria-hidden="true" />

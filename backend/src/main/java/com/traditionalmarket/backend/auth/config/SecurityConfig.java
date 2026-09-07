@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/favorites/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/markets").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/markets/*/stores").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/markets/**").hasRole("ADMIN")
