@@ -56,6 +56,10 @@ public class UserAccount extends BaseTimeEntity {
         return new UserAccount(email, passwordHash, name, UserRole.USER);
     }
 
+    public static UserAccount createAdmin(String email, String passwordHash, String name) {
+        return new UserAccount(email, passwordHash, name, UserRole.ADMIN);
+    }
+
     private static String normalizeEmail(String email) {
         return requireText(email, "이메일").toLowerCase(Locale.ROOT);
     }

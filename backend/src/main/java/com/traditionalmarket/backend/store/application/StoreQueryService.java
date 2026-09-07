@@ -12,6 +12,8 @@ import com.traditionalmarket.backend.store.domain.Store;
 import com.traditionalmarket.backend.store.domain.StoreCategory;
 import com.traditionalmarket.backend.store.domain.StoreStatus;
 import com.traditionalmarket.backend.store.dto.response.StorePageResponse;
+import com.traditionalmarket.backend.store.dto.response.StoreDetailResponse;
+import com.traditionalmarket.backend.store.exception.StoreNotFoundException;
 import com.traditionalmarket.backend.store.repository.StoreRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,17 @@ public class StoreQueryService {
 
     private final MarketRepository marketRepository;
     private final StoreRepository storeRepository;
+
+    public StoreDetailResponse findStore(Long marketId, Long storeId) {
+        if (!marketRepository.existsById(marketId)) {
+            throw new MarketNotFoundException(marketId);
+        }
+
+        Store store = storeRepository.findByIdAndMarketId(storeId, marketId)
+                .orElseThrow(() -> new StoreNotFoundException(marketId, storeId));
+
+        return StoreDetailResponse.from(store);
+    }
 
     public StorePageResponse findStores(
             Long marketId,

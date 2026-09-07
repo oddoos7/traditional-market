@@ -1,6 +1,9 @@
 package com.traditionalmarket.backend.market;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,7 +36,9 @@ class MarketCommandApiTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
     }
 
     @Test
@@ -55,6 +60,8 @@ class MarketCommandApiTest {
                 """;
 
         mockMvc.perform(post("/api/markets")
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isCreated())
@@ -94,6 +101,8 @@ class MarketCommandApiTest {
                 """;
 
         mockMvc.perform(put("/api/markets/{marketId}", marketId)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isOk())
@@ -127,6 +136,8 @@ class MarketCommandApiTest {
                 """;
 
         mockMvc.perform(post("/api/markets")
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isBadRequest())
@@ -145,6 +156,8 @@ class MarketCommandApiTest {
                 """;
 
         mockMvc.perform(post("/api/markets")
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isBadRequest())
@@ -162,10 +175,35 @@ class MarketCommandApiTest {
                 """;
 
         mockMvc.perform(put("/api/markets/{marketId}", 999_999L)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("MARKET_NOT_FOUND"));
+    }
+
+    @Test
+    void requiresAuthenticationWhenCreatingMarket() throws Exception {
+        mockMvc.perform(post("/api/markets")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest("비로그인 생성 시도")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+    }
+
+    @Test
+    void rejectsMarketUpdateFromRegularUser() throws Exception {
+        Long marketId = findMarketId("우리동네 중앙시장");
+
+        mockMvc.perform(put("/api/markets/{marketId}", marketId)
+                        .with(user("member@example.com").roles("USER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest("일반 회원 수정 시도")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     }
 
     private Long findMarketId(String marketName) {
@@ -174,5 +212,15 @@ class MarketCommandApiTest {
                 Long.class,
                 marketName
         );
+    }
+
+    private String validRequest(String name) {
+        return """
+                {
+                  "name": "%s",
+                  "address": "서울특별시 테스트구 시장로 1",
+                  "status": "OPEN"
+                }
+                """.formatted(name);
     }
 }

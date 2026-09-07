@@ -1,5 +1,7 @@
 package com.traditionalmarket.backend.store.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +13,8 @@ import com.traditionalmarket.backend.store.domain.StoreCategory;
 import com.traditionalmarket.backend.store.domain.StoreStatus;
 
 public interface StoreRepository extends JpaRepository<Store, Long> {
+
+    Optional<Store> findByIdAndMarketId(Long storeId, Long marketId);
 
     @Query(
             value = """

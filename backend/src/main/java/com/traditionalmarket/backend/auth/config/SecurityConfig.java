@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -36,11 +37,14 @@ public class SecurityConfig {
                         .securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/markets").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/markets/*/stores").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/markets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/markets/**").permitAll()
                         .requestMatchers(
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/api/auth/csrf",
-                                "/api/markets/**",
                                 "/api/health",
                                 "/actuator/health",
                                 "/h2-console/**"

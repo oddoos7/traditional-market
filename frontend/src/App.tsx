@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Search,
   SearchX,
+  ShieldCheck,
   SlidersHorizontal,
   Store,
   UserPlus,
@@ -30,8 +31,13 @@ import {
 } from 'react-router-dom'
 import { getMarket, getMarkets, MarketApiError } from './api/marketApi'
 import { useAuth } from './auth/AuthContext'
+import { AdminRoute } from './auth/AdminRoute'
+import { AdminPage } from './pages/AdminPage'
+import { MarketStoreSection } from './components/MarketStoreSection'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
+import { StoreDetailPage } from './pages/StoreDetailPage'
+import { StoreFormPage } from './pages/StoreFormPage'
 import type {
   Market,
   MarketDetail,
@@ -74,6 +80,7 @@ function App() {
           )}
         />
         <Route path="markets/:marketId" element={<MarketDetailPage />} />
+        <Route path="markets/:marketId/stores/:storeId" element={<StoreDetailPage />} />
         <Route
           path="login"
           element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>}
@@ -81,6 +88,18 @@ function App() {
         <Route
           path="signup"
           element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>}
+        />
+        <Route
+          path="admin"
+          element={<AdminRoute><AdminPage /></AdminRoute>}
+        />
+        <Route
+          path="admin/markets/:marketId/stores/new"
+          element={<AdminRoute><StoreFormPage /></AdminRoute>}
+        />
+        <Route
+          path="admin/markets/:marketId/stores/:storeId/edit"
+          element={<AdminRoute><StoreFormPage /></AdminRoute>}
         />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
@@ -129,6 +148,12 @@ function SiteLayout() {
               </span>
             ) : user ? (
               <>
+                {user.role === 'ADMIN' && (
+                  <Link className="header-admin" to="/admin">
+                    <ShieldCheck size={16} aria-hidden="true" />
+                    <span>관리자 센터</span>
+                  </Link>
+                )}
                 <div className="header-user">
                   <span className="header-avatar" aria-hidden="true">
                     {user.name.slice(0, 1).toUpperCase()}
@@ -568,6 +593,8 @@ function MarketDetailContent({ market }: { market: MarketDetail }) {
           <span>최종 수정 {formatDate(market.updatedAt)}</span>
         </div>
       </section>
+
+      <MarketStoreSection marketId={market.id} marketName={market.name} />
     </main>
   )
 }

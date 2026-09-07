@@ -72,7 +72,7 @@ async function getCsrfToken(forceRefresh = false): Promise<CsrfTokenResponse> {
   return csrfToken
 }
 
-async function requestWithCsrf(
+export async function fetchWithCsrf(
   path: string,
   init: RequestInit,
   retryAfterForbidden = true,
@@ -89,7 +89,7 @@ async function requestWithCsrf(
 
   if (response.status === 403 && retryAfterForbidden) {
     csrfToken = null
-    return requestWithCsrf(path, init, false)
+    return fetchWithCsrf(path, init, false)
   }
 
   return response
@@ -110,7 +110,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 export async function signup(input: SignupInput): Promise<AuthUser> {
-  const response = await requestWithCsrf('/auth/signup', {
+  const response = await fetchWithCsrf('/auth/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -124,7 +124,7 @@ export async function signup(input: SignupInput): Promise<AuthUser> {
 }
 
 export async function login(input: LoginInput): Promise<AuthUser> {
-  const response = await requestWithCsrf('/auth/login', {
+  const response = await fetchWithCsrf('/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -139,7 +139,7 @@ export async function login(input: LoginInput): Promise<AuthUser> {
 }
 
 export async function logout(): Promise<void> {
-  const response = await requestWithCsrf('/auth/logout', { method: 'POST' })
+  const response = await fetchWithCsrf('/auth/logout', { method: 'POST' })
 
   if (!response.ok) {
     throw await toAuthApiError(response, '로그아웃하지 못했습니다.')

@@ -108,6 +108,35 @@ public class Store extends BaseTimeEntity {
         this.status = status == null ? StoreStatus.OPEN : status;
     }
 
+    public void update(
+            String name,
+            String description,
+            StoreCategory category,
+            String location,
+            String phone,
+            String openingHours,
+            String closedDays,
+            String imageUrl,
+            StoreStatus status
+    ) {
+        if (category == null) {
+            throw new IllegalArgumentException("점포 카테고리는 필수입니다.");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("점포 운영 상태는 필수입니다.");
+        }
+
+        this.name = requireText(name, "점포명");
+        this.description = normalizeNullable(description);
+        this.category = category;
+        this.location = normalizeNullable(location);
+        this.phone = normalizeNullable(phone);
+        this.openingHours = normalizeNullable(openingHours);
+        this.closedDays = normalizeNullable(closedDays);
+        this.imageUrl = normalizeNullable(imageUrl);
+        this.status = status;
+    }
+
     private static String requireText(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + "은(는) 필수입니다.");

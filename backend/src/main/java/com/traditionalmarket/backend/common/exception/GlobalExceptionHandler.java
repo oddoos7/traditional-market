@@ -11,6 +11,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.traditionalmarket.backend.common.response.ApiErrorResponse;
 import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
+import com.traditionalmarket.backend.store.exception.StoreNotFoundException;
 import com.traditionalmarket.backend.user.exception.DuplicateEmailException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -41,6 +42,14 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiErrorResponse("MARKET_NOT_FOUND", exception.getMessage()));
+    }
+
+    @ExceptionHandler(StoreNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleStoreNotFound(
+            StoreNotFoundException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("STORE_NOT_FOUND", exception.getMessage()));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
