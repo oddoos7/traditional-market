@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,6 +12,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.traditionalmarket.backend.common.response.ApiErrorResponse;
 import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
+import com.traditionalmarket.backend.review.exception.DuplicateReviewException;
+import com.traditionalmarket.backend.review.exception.ReviewNotFoundException;
 import com.traditionalmarket.backend.store.exception.StoreNotFoundException;
 import com.traditionalmarket.backend.user.exception.DuplicateEmailException;
 
@@ -18,6 +21,30 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DuplicateReviewException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateReview(
+            DuplicateReviewException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("REVIEW_ALREADY_EXISTS", exception.getMessage()));
+    }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleReviewNotFound(
+            ReviewNotFoundException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("REVIEW_NOT_FOUND", exception.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            AccessDeniedException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiErrorResponse("ACCESS_DENIED", exception.getMessage()));
+    }
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateEmail(
