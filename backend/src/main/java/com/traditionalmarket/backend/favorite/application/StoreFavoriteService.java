@@ -46,7 +46,7 @@ public class StoreFavoriteService {
 
     @Transactional
     public FavoriteStatusResponse addFavorite(String email, Long storeId) {
-        UserAccount user = getUser(email);
+        UserAccount user = getUserForUpdate(email);
         Store store = getStore(storeId);
 
         if (!storeFavoriteRepository.existsByUserIdAndStoreId(user.getId(), storeId)) {
@@ -58,13 +58,18 @@ public class StoreFavoriteService {
 
     @Transactional
     public void removeFavorite(String email, Long storeId) {
-        UserAccount user = getUser(email);
+        UserAccount user = getUserForUpdate(email);
         ensureStoreExists(storeId);
         storeFavoriteRepository.deleteByUserIdAndStoreId(user.getId(), storeId);
     }
 
     private UserAccount getUser(String email) {
         return userAccountRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UsernameNotFoundException("로그인 회원을 찾을 수 없습니다."));
+    }
+
+    private UserAccount getUserForUpdate(String email) {
+        return userAccountRepository.findByEmailIgnoreCaseForUpdate(email)
                 .orElseThrow(() -> new UsernameNotFoundException("로그인 회원을 찾을 수 없습니다."));
     }
 

@@ -11,6 +11,8 @@ public interface StoreFavoriteRepository extends JpaRepository<StoreFavorite, Lo
 
     boolean existsByUserIdAndStoreId(Long userId, Long storeId);
 
+    long countByUserIdAndStoreId(Long userId, Long storeId);
+
     long deleteByUserIdAndStoreId(Long userId, Long storeId);
 
     @EntityGraph(attributePaths = {"store", "store.market"})
