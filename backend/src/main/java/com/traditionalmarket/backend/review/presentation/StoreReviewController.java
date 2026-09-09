@@ -23,6 +23,7 @@ import com.traditionalmarket.backend.review.dto.response.ReviewResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 
 @Validated
@@ -78,7 +79,7 @@ public class StoreReviewController {
     @PutMapping("/{reviewId}")
     public ReviewResponse updateReview(
             @PathVariable Long storeId,
-            @PathVariable Long reviewId,
+            @PathVariable @Positive Long reviewId,
             Principal principal,
             @Valid @RequestBody ReviewSaveRequest request
     ) {
@@ -93,7 +94,7 @@ public class StoreReviewController {
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long storeId,
-            @PathVariable Long reviewId,
+            @PathVariable @Positive Long reviewId,
             Principal principal
     ) {
         storeReviewService.deleteReview(principal.getName(), storeId, reviewId);

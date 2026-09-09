@@ -167,6 +167,29 @@ class StoreReviewApiTest {
     }
 
     @Test
+    void rejectsNonPositiveReviewIds() throws Exception {
+        Long storeId = findStoreId("정다운수산");
+
+        mockMvc.perform(put("/api/stores/{storeId}/reviews/{reviewId}", storeId, 0)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewRequest(4, "수정할 리뷰 ID는 양수여야 합니다.")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(delete(
+                        "/api/stores/{storeId}/reviews/{reviewId}",
+                        storeId,
+                        -1
+                )
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
     void returnsNotFoundForUnknownStore() throws Exception {
         mockMvc.perform(get("/api/stores/{storeId}/reviews", 999_999L))
                 .andExpect(status().isNotFound())
