@@ -19,7 +19,7 @@ import {
   updateStoreReview,
 } from '../api/reviewApi'
 import { useAuth } from '../auth/AuthContext'
-import type { ReviewSaveInput, StoreReview } from '../types/review'
+import type { ReviewSaveInput, StoreReview, StoreReviewPage } from '../types/review'
 
 const REVIEW_PAGE_SIZE = 5
 
@@ -37,6 +37,15 @@ export function StoreReviewSection({ storeId }: { storeId: number }) {
     queryKey: ['store-reviews', storeId, user?.id, page],
     queryFn: () => getStoreReviews(storeId, page, REVIEW_PAGE_SIZE),
   })
+
+  useEffect(() => {
+    if (!reviewsQuery.data || reviewsQuery.isFetching || page === 0) return
+
+    const lastAvailablePage = Math.max(reviewsQuery.data.totalPages - 1, 0)
+    if (page > lastAvailablePage) {
+      setPage(lastAvailablePage)
+    }
+  }, [page, reviewsQuery.data, reviewsQuery.isFetching])
 
   const myReviewQuery = useQuery({
     queryKey: ['my-store-review', storeId, user?.id],
@@ -83,6 +92,20 @@ export function StoreReviewSection({ storeId }: { storeId: number }) {
         setRating(5)
         setContent('')
       }
+
+      const currentReviewPage = queryClient.getQueryData<StoreReviewPage>([
+        'store-reviews',
+        storeId,
+        user?.id,
+        page,
+      ])
+      if (currentReviewPage) {
+        setPage((current) => Math.min(
+          current,
+          getLastPageAfterDeletion(currentReviewPage),
+        ))
+      }
+
       queryClient.invalidateQueries({ queryKey: ['store-reviews', storeId] })
       setSuccessMessage('리뷰를 삭제했습니다.')
     },
@@ -368,4 +391,12 @@ function formatReviewDate(value: string) {
     month: 'short',
     day: 'numeric',
   }).format(date)
+}
+
+function getLastPageAfterDeletion(reviewPage: StoreReviewPage) {
+  const remainingElements = Math.max(reviewPage.totalElements - 1, 0)
+  const pageSize = Math.max(reviewPage.size, 1)
+  const remainingPages = Math.ceil(remainingElements / pageSize)
+
+  return Math.max(remainingPages - 1, 0)
 }
