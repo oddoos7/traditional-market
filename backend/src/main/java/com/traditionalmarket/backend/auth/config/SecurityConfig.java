@@ -53,9 +53,10 @@ public class SecurityConfig {
                                 "/api/auth/csrf",
                                 "/api/health",
                                 "/actuator/health",
-                                "/h2-console/**"
+                                "/h2-console/**",
+                                "/error"
                         ).permitAll()
-                        .anyRequest().permitAll())
+                        .anyRequest().denyAll())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) ->
                                 writeError(
