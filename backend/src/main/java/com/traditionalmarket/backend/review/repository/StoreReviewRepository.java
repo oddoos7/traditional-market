@@ -24,6 +24,8 @@ public interface StoreReviewRepository extends JpaRepository<StoreReview, Long> 
 
     boolean existsByUserIdAndStoreId(Long userId, Long storeId);
 
+    long countByUserIdAndStoreId(Long userId, Long storeId);
+
     @Query("SELECT AVG(r.rating) FROM StoreReview r WHERE r.store.id = :storeId")
     Double findAverageRatingByStoreId(@Param("storeId") Long storeId);
 }

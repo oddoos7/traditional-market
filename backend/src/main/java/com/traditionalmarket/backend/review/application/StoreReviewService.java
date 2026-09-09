@@ -72,7 +72,7 @@ public class StoreReviewService {
             Long storeId,
             ReviewSaveRequest request
     ) {
-        UserAccount user = getUser(email);
+        UserAccount user = getUserForUpdate(email);
         Store store = getStore(storeId);
 
         if (storeReviewRepository.existsByUserIdAndStoreId(user.getId(), storeId)) {
@@ -119,6 +119,11 @@ public class StoreReviewService {
 
     private UserAccount getUser(String email) {
         return userAccountRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UsernameNotFoundException("로그인 회원을 찾을 수 없습니다."));
+    }
+
+    private UserAccount getUserForUpdate(String email) {
+        return userAccountRepository.findByEmailIgnoreCaseForUpdate(email)
                 .orElseThrow(() -> new UsernameNotFoundException("로그인 회원을 찾을 수 없습니다."));
     }
 
