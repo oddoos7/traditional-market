@@ -9,6 +9,12 @@ import { getCurrentUser, login, logout, signup } from '../api/authApi'
 import type { AuthUser, LoginInput, SignupInput } from '../types/auth'
 
 const AUTH_QUERY_KEY = ['auth', 'me'] as const
+const SESSION_SCOPED_QUERY_NAMES = new Set([
+  'favorites',
+  'favorite-status',
+  'my-store-review',
+  'store-reviews',
+])
 
 interface AuthContextValue {
   user: AuthUser | null
@@ -41,7 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: logout,
-    onSuccess: () => queryClient.setQueryData(AUTH_QUERY_KEY, null),
+    onSuccess: async () => {
+      await queryClient.cancelQueries({
+        predicate: (query) => isSessionScopedQuery(query.queryKey),
+      })
+      queryClient.removeQueries({
+        predicate: (query) => isSessionScopedQuery(query.queryKey),
+      })
+      queryClient.setQueryData(AUTH_QUERY_KEY, null)
+    },
   })
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -75,4 +89,9 @@ export function useAuth() {
   }
 
   return context
+}
+
+function isSessionScopedQuery(queryKey: readonly unknown[]) {
+  const [queryName] = queryKey
+  return typeof queryName === 'string' && SESSION_SCOPED_QUERY_NAMES.has(queryName)
 }
