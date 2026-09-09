@@ -50,6 +50,17 @@ async function toAuthApiError(response: Response, fallbackMessage: string) {
   )
 }
 
+async function isInvalidCsrfResponse(response: Response): Promise<boolean> {
+  if (response.status !== 403) return false
+
+  try {
+    const errorBody = await response.clone().json() as ApiErrorBody
+    return errorBody.code === 'INVALID_CSRF_TOKEN'
+  } catch {
+    return false
+  }
+}
+
 async function getCsrfToken(forceRefresh = false): Promise<CsrfTokenResponse> {
   if (csrfToken && !forceRefresh) return csrfToken
 
@@ -75,7 +86,7 @@ async function getCsrfToken(forceRefresh = false): Promise<CsrfTokenResponse> {
 export async function fetchWithCsrf(
   path: string,
   init: RequestInit,
-  retryAfterForbidden = true,
+  retryAfterInvalidCsrf = true,
 ): Promise<Response> {
   const token = await getCsrfToken()
   const headers = new Headers(init.headers)
@@ -87,7 +98,7 @@ export async function fetchWithCsrf(
     credentials: 'include',
   })
 
-  if (response.status === 403 && retryAfterForbidden) {
+  if (retryAfterInvalidCsrf && await isInvalidCsrfResponse(response)) {
     csrfToken = null
     return fetchWithCsrf(path, init, false)
   }

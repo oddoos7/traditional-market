@@ -143,7 +143,8 @@ POST /api/auth/logout
 - 중복 이메일: HTTP 409, `EMAIL_ALREADY_EXISTS`
 - 잘못된 로그인 정보: HTTP 401, `INVALID_CREDENTIALS`
 - 인증되지 않은 사용자: HTTP 401, `AUTHENTICATION_REQUIRED`
-- 누락되거나 잘못된 CSRF 토큰: HTTP 403, `ACCESS_DENIED`
+- 누락되거나 잘못된 CSRF 토큰: HTTP 403, `INVALID_CSRF_TOKEN`
+- 인증된 사용자의 권한 부족: HTTP 403, `ACCESS_DENIED`
 
 ## 빌드 및 테스트
 

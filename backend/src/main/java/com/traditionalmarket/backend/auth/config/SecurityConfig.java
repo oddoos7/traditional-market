@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.session.ChangeSessionIdAu
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfException;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -66,12 +68,7 @@ public class SecurityConfig {
                                         "로그인이 필요합니다."
                                 ))
                         .accessDeniedHandler((request, response, accessDeniedException) ->
-                                writeError(
-                                        response,
-                                        HttpStatus.FORBIDDEN,
-                                        "ACCESS_DENIED",
-                                        "요청 권한이 없거나 CSRF 토큰이 올바르지 않습니다."
-                                )))
+                                writeAccessDeniedError(response, accessDeniedException)))
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .invalidateHttpSession(true)
@@ -121,5 +118,27 @@ public class SecurityConfig {
         response.getWriter().write("""
                 {"code":"%s","message":"%s"}
                 """.formatted(code, message).trim());
+    }
+
+    private static void writeAccessDeniedError(
+            HttpServletResponse response,
+            AccessDeniedException exception
+    ) throws IOException {
+        if (exception instanceof CsrfException) {
+            writeError(
+                    response,
+                    HttpStatus.FORBIDDEN,
+                    "INVALID_CSRF_TOKEN",
+                    "CSRF 토큰이 없거나 올바르지 않습니다."
+            );
+            return;
+        }
+
+        writeError(
+                response,
+                HttpStatus.FORBIDDEN,
+                "ACCESS_DENIED",
+                "요청 권한이 없습니다."
+        );
     }
 }

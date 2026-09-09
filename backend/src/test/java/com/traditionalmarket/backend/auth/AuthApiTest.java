@@ -150,10 +150,10 @@ class AuthApiTest {
     @Test
     void rejectsUnsafeRequestWithoutCsrfToken() throws Exception {
         mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(signupRequest("member@example.com", "password123", "시장사랑")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(signupRequest("member@example.com", "password123", "시장사랑")))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+                .andExpect(jsonPath("$.code").value("INVALID_CSRF_TOKEN"));
     }
 
     @Test
