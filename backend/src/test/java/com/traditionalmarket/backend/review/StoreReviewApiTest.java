@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,6 +97,32 @@ class StoreReviewApiTest {
         mockMvc.perform(get("/api/stores/{storeId}/reviews", storeId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void returnsReviewsInStableOrderWhenCreatedAtIsSame() throws Exception {
+        Long storeId = findStoreId("정다운수산");
+        LocalDateTime sameCreatedAt = LocalDateTime.of(2026, 1, 1, 12, 0);
+        Long firstReviewId = insertReview(storeId, "first", sameCreatedAt);
+        Long secondReviewId = insertReview(storeId, "second", sameCreatedAt);
+        Long thirdReviewId = insertReview(storeId, "third", sameCreatedAt);
+
+        mockMvc.perform(get("/api/stores/{storeId}/reviews", storeId)
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(thirdReviewId))
+                .andExpect(jsonPath("$.content[1].id").value(secondReviewId))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.totalElements").value(3));
+
+        mockMvc.perform(get("/api/stores/{storeId}/reviews", storeId)
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(firstReviewId))
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.page").value(1));
     }
 
     @Test
@@ -262,6 +290,47 @@ class StoreReviewApiTest {
                 Long.class,
                 storeId,
                 email
+        );
+    }
+
+    private Long insertReview(Long storeId, String suffix, LocalDateTime createdAt) {
+        String email = "stable-order-" + suffix + "@example.com";
+        jdbcTemplate.update(
+                """
+                INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
+                VALUES (?, ?, ?, 'USER', ?, ?)
+                """,
+                email,
+                "test-password-hash",
+                "정렬 테스트 " + suffix,
+                createdAt,
+                createdAt
+        );
+        Long userId = jdbcTemplate.queryForObject(
+                "SELECT id FROM users WHERE email = ?",
+                Long.class,
+                email
+        );
+
+        jdbcTemplate.update(
+                """
+                INSERT INTO store_reviews (
+                    user_id, store_id, rating, content, created_at, updated_at
+                )
+                VALUES (?, ?, 5, ?, ?, ?)
+                """,
+                userId,
+                storeId,
+                "안정 정렬 테스트 " + suffix,
+                createdAt,
+                createdAt
+        );
+
+        return jdbcTemplate.queryForObject(
+                "SELECT id FROM store_reviews WHERE user_id = ? AND store_id = ?",
+                Long.class,
+                userId,
+                storeId
         );
     }
 

@@ -46,7 +46,10 @@ public class StoreReviewService {
         PageRequest pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
+                Sort.by(
+                        Sort.Order.desc("createdAt"),
+                        Sort.Order.desc("id")
+                )
         );
         Page<StoreReview> reviews = storeReviewRepository.findByStoreId(storeId, pageable);
         Double averageRating = storeReviewRepository.findAverageRatingByStoreId(storeId);
