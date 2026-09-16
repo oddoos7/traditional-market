@@ -36,6 +36,7 @@ import { AdminRoute } from './auth/AdminRoute'
 import { RequireAuthRoute } from './auth/RequireAuthRoute'
 import { AdminPage } from './pages/AdminPage'
 import { MarketStoreSection } from './components/MarketStoreSection'
+import { MarketLocationMap } from './components/MarketLocationMap'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { StoreDetailPage } from './pages/StoreDetailPage'
@@ -475,7 +476,6 @@ function MarketDetailPage() {
 
 function MarketDetailContent({ market }: { market: MarketDetail }) {
   const fullAddress = [market.address, market.detailAddress].filter(Boolean).join(' ')
-  const hasCoordinates = market.latitude !== null && market.longitude !== null
 
   useEffect(() => {
     const previousTitle = document.title
@@ -572,28 +572,12 @@ function MarketDetailContent({ market }: { market: MarketDetail }) {
           />
         </div>
 
-        <div className="location-panel">
-          <div className="location-copy">
-            <span className="location-icon">
-              <MapPin size={24} aria-hidden="true" />
-            </span>
-            <div>
-              <span className="location-label">시장 위치</span>
-              <h3>{market.name}</h3>
-              <p>{fullAddress}</p>
-            </div>
-          </div>
-          <div className="coordinate-box">
-            {hasCoordinates ? (
-              <>
-                <span>위도 {market.latitude}</span>
-                <span>경도 {market.longitude}</span>
-              </>
-            ) : (
-              <span>위치 좌표를 준비 중입니다.</span>
-            )}
-          </div>
-        </div>
+        <MarketLocationMap
+          marketName={market.name}
+          address={fullAddress}
+          latitude={market.latitude}
+          longitude={market.longitude}
+        />
 
         <div className="visit-note">
           <Info size={19} aria-hidden="true" />
