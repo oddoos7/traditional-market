@@ -8,10 +8,33 @@ export interface KakaoControlPosition {}
 
 export interface KakaoMapInstance {
   addControl(control: KakaoMapControl, position: KakaoControlPosition): void
+  panTo(position: KakaoLatLng): void
+  setBounds(bounds: KakaoLatLngBounds, padding?: number): void
+  setLevel(level: number): void
 }
 
 export interface KakaoMarkerInstance {
   setMap(map: KakaoMapInstance | null): void
+}
+
+export interface KakaoLatLngBounds {
+  extend(position: KakaoLatLng): void
+}
+
+export interface KakaoAddressSearchResult {
+  address_name: string
+  x: string
+  y: string
+  road_address?: {
+    address_name: string
+  } | null
+}
+
+export interface KakaoGeocoder {
+  addressSearch(
+    address: string,
+    callback: (results: KakaoAddressSearchResult[], status: string) => void,
+  ): void
 }
 
 export interface KakaoMapsSdk {
@@ -21,10 +44,22 @@ export interface KakaoMapsSdk {
     container: HTMLElement,
     options: { center: KakaoLatLng; level: number },
   ) => KakaoMapInstance
-  Marker: new (options: { position: KakaoLatLng }) => KakaoMarkerInstance
+  LatLngBounds: new () => KakaoLatLngBounds
+  Marker: new (options: { position: KakaoLatLng; title?: string }) => KakaoMarkerInstance
   ZoomControl: new () => KakaoMapControl
   ControlPosition: {
     RIGHT: KakaoControlPosition
+  }
+  event: {
+    addListener(target: object, eventName: string, handler: () => void): void
+  }
+  services: {
+    Geocoder: new () => KakaoGeocoder
+    Status: {
+      OK: string
+      ZERO_RESULT: string
+      ERROR: string
+    }
   }
 }
 
@@ -69,7 +104,7 @@ export function loadKakaoMaps(appKey: string): Promise<KakaoMapsSdk> {
 
     const script = document.createElement('script')
     script.id = KAKAO_MAP_SDK_ID
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(appKey)}&autoload=false`
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(appKey)}&autoload=false&libraries=services`
     script.async = true
     script.addEventListener('load', handleLoad, { once: true })
     script.addEventListener('error', handleError, { once: true })

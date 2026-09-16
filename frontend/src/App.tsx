@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   LogIn,
   LogOut,
+  MapPinned,
   MapPin,
   Phone,
   RefreshCw,
@@ -38,6 +39,7 @@ import { AdminPage } from './pages/AdminPage'
 import { MarketStoreSection } from './components/MarketStoreSection'
 import { MarketLocationMap } from './components/MarketLocationMap'
 import { LoginPage } from './pages/LoginPage'
+import { MarketMapPage } from './pages/MarketMapPage'
 import { SignupPage } from './pages/SignupPage'
 import { StoreDetailPage } from './pages/StoreDetailPage'
 import { StoreFormPage } from './pages/StoreFormPage'
@@ -83,6 +85,7 @@ function App() {
             />
           )}
         />
+        <Route path="map" element={<MarketMapPage />} />
         <Route path="markets/:marketId" element={<MarketDetailPage />} />
         <Route path="markets/:marketId/stores/:storeId" element={<StoreDetailPage />} />
         <Route
@@ -150,6 +153,10 @@ function SiteLayout() {
             </span>
           </Link>
           <div className="header-actions">
+            <Link className="header-map" to="/map">
+              <MapPinned size={16} aria-hidden="true" />
+              <span>시장 지도</span>
+            </Link>
             {isCheckingAuth ? (
               <span className="header-auth-loading" aria-label="로그인 상태 확인 중">
                 <LoaderCircle className="spin" size={18} aria-hidden="true" />

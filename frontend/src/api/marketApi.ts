@@ -1,4 +1,4 @@
-import type { MarketDetail, MarketPage, MarketQueryParams } from '../types/market'
+import type { Market, MarketDetail, MarketPage, MarketQueryParams } from '../types/market'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -26,6 +26,28 @@ export async function getMarkets(params: MarketQueryParams): Promise<MarketPage>
   }
 
   return response.json() as Promise<MarketPage>
+}
+
+export async function getAllMarkets(): Promise<Market[]> {
+  const markets: Market[] = []
+  let page = 0
+  let totalPages = 1
+
+  while (page < totalPages) {
+    const response = await getMarkets({
+      keyword: '',
+      status: '',
+      page,
+      size: 50,
+      sort: 'NAME',
+    })
+
+    markets.push(...response.content)
+    totalPages = response.totalPages
+    page += 1
+  }
+
+  return markets
 }
 
 export async function getMarket(marketId: number): Promise<MarketDetail> {
