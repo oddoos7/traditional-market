@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,8 +17,10 @@ import com.traditionalmarket.backend.favorite.application.StoreFavoriteService;
 import com.traditionalmarket.backend.favorite.dto.response.FavoriteStatusResponse;
 import com.traditionalmarket.backend.favorite.dto.response.FavoriteStoreResponse;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 
+@Validated
 @RestController
 @RequestMapping("/api/favorites/stores")
 @RequiredArgsConstructor
@@ -33,7 +36,7 @@ public class StoreFavoriteController {
     @GetMapping("/{storeId}/status")
     public FavoriteStatusResponse getFavoriteStatus(
             Principal principal,
-            @PathVariable Long storeId
+            @PathVariable @Positive Long storeId
     ) {
         return storeFavoriteService.getFavoriteStatus(principal.getName(), storeId);
     }
@@ -41,7 +44,7 @@ public class StoreFavoriteController {
     @PostMapping("/{storeId}")
     public ResponseEntity<FavoriteStatusResponse> addFavorite(
             Principal principal,
-            @PathVariable Long storeId
+            @PathVariable @Positive Long storeId
     ) {
         FavoriteStatusResponse response = storeFavoriteService.addFavorite(
                 principal.getName(),
@@ -55,7 +58,7 @@ public class StoreFavoriteController {
     @DeleteMapping("/{storeId}")
     public ResponseEntity<Void> removeFavorite(
             Principal principal,
-            @PathVariable Long storeId
+            @PathVariable @Positive Long storeId
     ) {
         storeFavoriteService.removeFavorite(principal.getName(), storeId);
         return ResponseEntity.noContent().build();

@@ -190,6 +190,44 @@ class StoreReviewApiTest {
     }
 
     @Test
+    void rejectsNonPositiveStoreIds() throws Exception {
+        mockMvc.perform(get("/api/stores/{storeId}/reviews", 0))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(get("/api/stores/{storeId}/reviews/me", -1)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(post("/api/stores/{storeId}/reviews", 0)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewRequest(5, "점포 ID는 양수여야 합니다.")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(put("/api/stores/{storeId}/reviews/{reviewId}", -1, 1)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewRequest(4, "점포 ID는 양수여야 합니다.")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(delete(
+                        "/api/stores/{storeId}/reviews/{reviewId}",
+                        0,
+                        1
+                )
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
     void returnsNotFoundForUnknownStore() throws Exception {
         mockMvc.perform(get("/api/stores/{storeId}/reviews", 999_999L))
                 .andExpect(status().isNotFound())

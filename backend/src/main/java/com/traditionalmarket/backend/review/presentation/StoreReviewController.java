@@ -36,7 +36,7 @@ public class StoreReviewController {
 
     @GetMapping
     public ReviewPageResponse getReviews(
-            @PathVariable Long storeId,
+            @PathVariable @Positive Long storeId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "5") @Min(1) @Max(20) int size,
             Principal principal
@@ -51,7 +51,7 @@ public class StoreReviewController {
 
     @GetMapping("/me")
     public ResponseEntity<ReviewResponse> getMyReview(
-            @PathVariable Long storeId,
+            @PathVariable @Positive Long storeId,
             Principal principal
     ) {
         return storeReviewService.getMyReview(principal.getName(), storeId)
@@ -61,7 +61,7 @@ public class StoreReviewController {
 
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(
-            @PathVariable Long storeId,
+            @PathVariable @Positive Long storeId,
             Principal principal,
             @Valid @RequestBody ReviewSaveRequest request
     ) {
@@ -78,7 +78,7 @@ public class StoreReviewController {
 
     @PutMapping("/{reviewId}")
     public ReviewResponse updateReview(
-            @PathVariable Long storeId,
+            @PathVariable @Positive Long storeId,
             @PathVariable @Positive Long reviewId,
             Principal principal,
             @Valid @RequestBody ReviewSaveRequest request
@@ -93,7 +93,7 @@ public class StoreReviewController {
 
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
-            @PathVariable Long storeId,
+            @PathVariable @Positive Long storeId,
             @PathVariable @Positive Long reviewId,
             Principal principal
     ) {

@@ -119,6 +119,26 @@ class StoreFavoriteApiTest {
                 .andExpect(jsonPath("$.code").value("STORE_NOT_FOUND"));
     }
 
+    @Test
+    void rejectsNonPositiveStoreIds() throws Exception {
+        mockMvc.perform(get("/api/favorites/stores/{storeId}/status", 0)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(post("/api/favorites/stores/{storeId}", -1)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        mockMvc.perform(delete("/api/favorites/stores/{storeId}", 0)
+                        .with(user(ADMIN_EMAIL).roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
     private Long findStoreId(String storeName) {
         return jdbcTemplate.queryForObject(
                 "SELECT id FROM stores WHERE name = ?",
