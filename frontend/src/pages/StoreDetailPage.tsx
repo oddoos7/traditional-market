@@ -15,6 +15,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { getStore, StoreApiError } from '../api/storeApi'
 import { useAuth } from '../auth/AuthContext'
 import { FavoriteButton } from '../components/FavoriteButton'
+import { StoreProductSection } from '../components/StoreProductSection'
 import { StoreReviewSection } from '../components/StoreReviewSection'
 import { STORE_CATEGORY_LABELS, STORE_STATUS_LABELS } from '../constants/store'
 import type { StoreDetail } from '../types/store'
@@ -141,6 +142,12 @@ function StoreDetailContent({ store }: { store: StoreDetail }) {
         </div>
         <p className="store-updated-at">최종 수정 {formatDate(store.updatedAt)}</p>
       </section>
+
+      <StoreProductSection
+        marketId={store.marketId}
+        storeId={store.id}
+        storeName={store.name}
+      />
 
       <StoreReviewSection storeId={store.id} />
     </main>

@@ -44,6 +44,8 @@ import { SignupPage } from './pages/SignupPage'
 import { StoreDetailPage } from './pages/StoreDetailPage'
 import { StoreFormPage } from './pages/StoreFormPage'
 import { FavoritesPage } from './pages/FavoritesPage'
+import { ProductDetailPage } from './pages/ProductDetailPage'
+import { ProductFormPage } from './pages/ProductFormPage'
 import type {
   Market,
   MarketDetail,
@@ -89,6 +91,10 @@ function App() {
         <Route path="markets/:marketId" element={<MarketDetailPage />} />
         <Route path="markets/:marketId/stores/:storeId" element={<StoreDetailPage />} />
         <Route
+          path="markets/:marketId/stores/:storeId/products/:productId"
+          element={<ProductDetailPage />}
+        />
+        <Route
           path="favorites"
           element={<RequireAuthRoute><FavoritesPage /></RequireAuthRoute>}
         />
@@ -111,6 +117,14 @@ function App() {
         <Route
           path="admin/markets/:marketId/stores/:storeId/edit"
           element={<AdminRoute><StoreFormPage /></AdminRoute>}
+        />
+        <Route
+          path="admin/markets/:marketId/stores/:storeId/products/new"
+          element={<AdminRoute><ProductFormPage /></AdminRoute>}
+        />
+        <Route
+          path="admin/markets/:marketId/stores/:storeId/products/:productId/edit"
+          element={<AdminRoute><ProductFormPage /></AdminRoute>}
         />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
