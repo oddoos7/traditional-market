@@ -1,10 +1,14 @@
 # 전통시장 ERD
 
-`Market`과 `Store`는 시장 하나에 여러 점포가 소속되는 1:N 관계입니다. `stores.market_id` 외래키가 `markets.id`를 참조합니다.
+현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1__create_initial_schema.sql`입니다.
 
 ```mermaid
 erDiagram
     MARKETS ||--o{ STORES : contains
+    USERS ||--o{ STORE_FAVORITES : adds
+    STORES ||--o{ STORE_FAVORITES : receives
+    USERS ||--o{ STORE_REVIEWS : writes
+    STORES ||--o{ STORE_REVIEWS : receives
 
     MARKETS {
         BIGINT id PK
@@ -48,6 +52,24 @@ erDiagram
         DATETIME created_at "가입일시"
         DATETIME updated_at "수정일시"
     }
+
+    STORE_FAVORITES {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT store_id FK
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
+
+    STORE_REVIEWS {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT store_id FK
+        INT rating "1~5"
+        VARCHAR_1000 content "리뷰 내용"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
 ```
 
 ## 설계 기준
@@ -63,3 +85,6 @@ erDiagram
 - 회원 이메일은 소문자로 정규화하고 `uk_users_email` 유일 제약으로 중복 가입을 방지합니다.
 - 비밀번호 원문은 저장하지 않고 BCrypt 단방향 해시만 `password_hash`에 저장합니다.
 - 회원 권한은 기본 `USER`로 생성되며 이후 관리자 기능에서 `ADMIN`을 사용할 수 있습니다.
+- 찜과 리뷰는 회원·점포 조합 유일 제약으로 중복 생성을 DB 수준에서도 차단합니다.
+- 리뷰 별점은 `1`부터 `5`까지의 값만 허용합니다.
+- 운영 DB 구조는 Hibernate 자동 생성이 아니라 Flyway 마이그레이션으로 변경 이력을 관리합니다.

@@ -52,18 +52,45 @@ User Name: sa
 Password: 입력하지 않음
 ```
 
-MySQL을 사용할 때는 `traditional_market` 데이터베이스를 만든 뒤 환경변수를 설정하고 `mysql` 프로필로 실행합니다.
+H2에서도 Flyway가 `backend/src/main/resources/db/migration`의 SQL을 실행하며, Hibernate는 생성된 스키마와 엔티티가 일치하는지 검증합니다.
+
+### Docker MySQL 실행
+
+Docker Desktop을 실행한 뒤 프로젝트 최상위 폴더에서 MySQL 8.4 컨테이너를 시작합니다. 기본 개발용 계정은 Compose 설정과 `mysql` 프로필에 동일하게 맞춰져 있어 별도 환경변수 없이 실행할 수 있습니다.
 
 PowerShell:
 
 ```powershell
-$env:DB_URL = 'jdbc:mysql://localhost:3306/traditional_market?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8'
-$env:DB_USERNAME = 'root'
-$env:DB_PASSWORD = '비밀번호'
-./gradlew.bat bootRun --args='--spring.profiles.active=mysql'
+docker compose up -d mysql
+docker compose ps
+
+cd backend
+.\gradlew.bat bootRun --args="--spring.profiles.active=mysql"
 ```
 
-현재 Market 테이블 설계는 [`docs/erd.md`](docs/erd.md)에서 확인할 수 있습니다.
+MySQL 데이터는 `mysql-data` Docker 볼륨에 저장되므로 컨테이너를 내려도 유지됩니다.
+
+```powershell
+docker compose down
+```
+
+포트나 비밀번호를 바꾸려면 `.env.example`을 `.env`로 복사한 뒤 값을 수정하고, 백엔드에는 같은 값을 환경변수로 전달합니다.
+
+```powershell
+Copy-Item .env.example .env
+$env:DB_USERNAME = 'market'
+$env:DB_PASSWORD = '변경한 비밀번호'
+```
+
+Flyway는 서버 시작 시 아직 적용되지 않은 `V숫자__설명.sql` 파일을 순서대로 한 번씩 실행합니다. 상품 테이블을 추가할 때 기존 `V1__create_initial_schema.sql`을 고치지 말고 `V2__create_products.sql`처럼 새 파일을 추가해야 합니다.
+
+현재 적용된 마이그레이션은 다음 명령으로 확인할 수 있습니다.
+
+```powershell
+docker compose exec mysql mysql -umarket -pmarket-local-password traditional_market -e "SELECT installed_rank, version, description, success FROM flyway_schema_history;"
+```
+
+현재 전체 데이터베이스 설계는 [`docs/erd.md`](docs/erd.md)에서 확인할 수 있습니다.
 
 ### 시장 목록 API
 
