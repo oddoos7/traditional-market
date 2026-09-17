@@ -5,6 +5,7 @@
 ```mermaid
 erDiagram
     MARKETS ||--o{ STORES : contains
+    STORES ||--o{ PRODUCTS : sells
     USERS ||--o{ STORE_FAVORITES : adds
     STORES ||--o{ STORE_FAVORITES : receives
     USERS ||--o{ STORE_REVIEWS : writes
@@ -70,6 +71,20 @@ erDiagram
         DATETIME created_at "생성일시"
         DATETIME updated_at "수정일시"
     }
+
+    PRODUCTS {
+        BIGINT id PK
+        BIGINT store_id FK
+        VARCHAR_100 name "상품명, 필수"
+        TEXT description "상품 설명"
+        DECIMAL_12_2 price "상품 가격, 0보다 큼"
+        INT stock_quantity "재고 수량, 0 이상"
+        VARCHAR_500 image_url "상품 이미지 URL"
+        VARCHAR_20 status "ON_SALE, SOLD_OUT, HIDDEN"
+        BIGINT version "낙관적 잠금 버전"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
 ```
 
 ## 설계 기준
@@ -88,3 +103,6 @@ erDiagram
 - 찜과 리뷰는 회원·점포 조합 유일 제약으로 중복 생성을 DB 수준에서도 차단합니다.
 - 리뷰 별점은 `1`부터 `5`까지의 값만 허용합니다.
 - 운영 DB 구조는 Hibernate 자동 생성이 아니라 Flyway 마이그레이션으로 변경 이력을 관리합니다.
+- 상품은 반드시 하나의 점포에 소속되며 가격은 `DECIMAL(12, 2)`, 재고는 0 이상의 정수로 저장합니다.
+- `products.version`은 주문·재고 차감 시 동시 수정을 감지하기 위한 낙관적 잠금 값입니다.
+- `HIDDEN` 상품은 공개 상품 목록과 상세 조회에서 제외합니다.

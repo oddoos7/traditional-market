@@ -26,14 +26,19 @@ class FlywayMigrationTest {
         MigrationInfo current = flyway.info().current();
 
         assertNotNull(current);
-        assertEquals("1", current.getVersion().getVersion());
-        assertEquals(1, countSuccessfulVersionOneMigrations());
-        assertEquals(5, countDomainTables());
+        assertEquals("2", current.getVersion().getVersion());
+        assertEquals(2, countSuccessfulMigrations());
+        assertEquals(6, countDomainTables());
     }
 
-    private int countSuccessfulVersionOneMigrations() {
+    private int countSuccessfulMigrations() {
         Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM flyway_schema_history WHERE version = '1' AND success = TRUE",
+                """
+                SELECT COUNT(*)
+                FROM flyway_schema_history
+                WHERE success = TRUE
+                  AND version IS NOT NULL
+                """,
                 Integer.class
         );
         return count == null ? 0 : count;
@@ -45,7 +50,14 @@ class FlywayMigrationTest {
                 SELECT COUNT(*)
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
-                  AND table_name IN ('markets', 'users', 'stores', 'store_favorites', 'store_reviews')
+                  AND table_name IN (
+                      'markets',
+                      'users',
+                      'stores',
+                      'store_favorites',
+                      'store_reviews',
+                      'products'
+                  )
                 """,
                 Integer.class
         );

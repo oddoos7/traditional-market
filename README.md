@@ -134,6 +134,43 @@ GET /api/markets/{marketId}/stores?keyword=수산&category=SEAFOOD&status=OPEN&p
 
 존재하지 않는 시장 ID는 `MARKET_NOT_FOUND` 코드와 함께 HTTP 404를 반환합니다. `local` 프로필에서는 목록 API 확인을 위한 샘플 점포 데이터 6건이 자동 등록됩니다.
 
+### 점포별 상품 API
+
+```http
+GET  /api/stores/{storeId}/products?keyword=사과&status=ON_SALE&page=0&size=12&sort=PRICE_LOW
+GET  /api/stores/{storeId}/products/{productId}
+POST /api/stores/{storeId}/products
+PUT  /api/stores/{storeId}/products/{productId}
+```
+
+| 파라미터 | 필수 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `storeId` | 예 | 없음 | 상품이 소속된 점포 ID |
+| `keyword` | 아니요 | 없음 | 상품명 또는 상품 설명 검색 |
+| `status` | 아니요 | 없음 | `ON_SALE`, `SOLD_OUT`, `HIDDEN` |
+| `page` | 아니요 | `0` | 0부터 시작하는 페이지 번호 |
+| `size` | 아니요 | `12` | 페이지 크기, 최대 50 |
+| `sort` | 아니요 | `LATEST` | `LATEST`, `NAME`, `PRICE_LOW`, `PRICE_HIGH` |
+
+상품 등록·수정은 관리자만 가능하며 CSRF 토큰이 필요합니다.
+
+```json
+{
+  "name": "새콤달콤 사과 1kg",
+  "description": "아삭하고 달콤한 제철 사과입니다.",
+  "price": 8500.00,
+  "stockQuantity": 30,
+  "imageUrl": null,
+  "status": "ON_SALE"
+}
+```
+
+- 가격은 0원보다 크고 정수 10자리·소수 2자리 이하여야 합니다.
+- 재고 수량은 `0`부터 `1000000`까지 입력할 수 있습니다.
+- `HIDDEN` 상품은 공개 목록과 상세 API에서 조회되지 않습니다.
+- 존재하지 않는 점포는 `STORE_NOT_FOUND`, 존재하지 않거나 다른 점포에 속한 상품은 `PRODUCT_NOT_FOUND`를 반환합니다.
+- `local` 프로필에서는 화면 개발용 샘플 상품 8건이 자동 등록됩니다.
+
 ### 회원가입·로그인 API
 
 인증은 `JSESSIONID` HttpOnly 쿠키를 사용하는 서버 세션 방식이며, 비밀번호는 BCrypt로 암호화하여 저장합니다. 세션 유효시간은 30분입니다.
