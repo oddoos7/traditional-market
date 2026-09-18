@@ -1,6 +1,6 @@
 # 전통시장 ERD
 
-현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1__create_initial_schema.sql`입니다.
+현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품과 장바구니로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V3` 마이그레이션입니다.
 
 ```mermaid
 erDiagram
@@ -10,6 +10,9 @@ erDiagram
     STORES ||--o{ STORE_FAVORITES : receives
     USERS ||--o{ STORE_REVIEWS : writes
     STORES ||--o{ STORE_REVIEWS : receives
+    USERS ||--o| CARTS : owns
+    CARTS ||--o{ CART_ITEMS : contains
+    PRODUCTS ||--o{ CART_ITEMS : selected
 
     MARKETS {
         BIGINT id PK
@@ -85,6 +88,22 @@ erDiagram
         DATETIME created_at "생성일시"
         DATETIME updated_at "수정일시"
     }
+
+    CARTS {
+        BIGINT id PK
+        BIGINT user_id FK,UK "장바구니 소유 회원"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
+
+    CART_ITEMS {
+        BIGINT id PK
+        BIGINT cart_id FK
+        BIGINT product_id FK
+        INT quantity "1~99"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
 ```
 
 ## 설계 기준
@@ -106,3 +125,7 @@ erDiagram
 - 상품은 반드시 하나의 점포에 소속되며 가격은 `DECIMAL(12, 2)`, 재고는 0 이상의 정수로 저장합니다.
 - `products.version`은 주문·재고 차감 시 동시 수정을 감지하기 위한 낙관적 잠금 값입니다.
 - `HIDDEN` 상품은 공개 상품 목록과 상세 조회에서 제외합니다.
+- 회원당 장바구니는 하나만 생성되며 `uk_carts_user` 유일 제약으로 중복 생성을 방지합니다.
+- 장바구니 안의 동일 상품은 한 행으로 관리하고 `uk_cart_items_cart_product` 유일 제약으로 중복 행을 방지합니다.
+- 장바구니 상품 수량은 1~99개로 제한하며, 서비스 계층에서 현재 상품 재고를 추가로 검증합니다.
+- 주문 단위를 명확하게 유지하기 위해 한 장바구니에는 한 점포의 상품만 담을 수 있습니다.

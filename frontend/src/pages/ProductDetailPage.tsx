@@ -14,6 +14,7 @@ import { useEffect } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { getProduct, ProductApiError } from '../api/productApi'
 import { useAuth } from '../auth/AuthContext'
+import { AddToCartPanel } from '../components/AddToCartPanel'
 import { formatProductPrice, PRODUCT_STATUS_LABELS } from '../constants/product'
 import type { ProductDetail } from '../types/product'
 
@@ -139,6 +140,8 @@ function ProductDetailContent({ product }: { product: ProductDetail }) {
                 : '현재는 구매할 수 없는 상품입니다.'}
             </p>
           </div>
+
+          <AddToCartPanel product={product} />
 
           <div className="product-detail-actions">
             <Link className="secondary-action" to={storePath}>

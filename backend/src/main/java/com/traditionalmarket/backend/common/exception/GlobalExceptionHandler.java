@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.traditionalmarket.backend.cart.exception.CartItemNotFoundException;
+import com.traditionalmarket.backend.cart.exception.CartProductUnavailableException;
+import com.traditionalmarket.backend.cart.exception.CartQuantityExceededException;
+import com.traditionalmarket.backend.cart.exception.CartStoreMismatchException;
 import com.traditionalmarket.backend.common.response.ApiErrorResponse;
 import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
 import com.traditionalmarket.backend.product.exception.ProductNotFoundException;
@@ -22,6 +26,38 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CartItemNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCartItemNotFound(
+            CartItemNotFoundException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("CART_ITEM_NOT_FOUND", exception.getMessage()));
+    }
+
+    @ExceptionHandler(CartProductUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCartProductUnavailable(
+            CartProductUnavailableException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("PRODUCT_NOT_AVAILABLE", exception.getMessage()));
+    }
+
+    @ExceptionHandler(CartQuantityExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleCartQuantityExceeded(
+            CartQuantityExceededException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("CART_QUANTITY_EXCEEDED", exception.getMessage()));
+    }
+
+    @ExceptionHandler(CartStoreMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleCartStoreMismatch(
+            CartStoreMismatchException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("CART_STORE_MISMATCH", exception.getMessage()));
+    }
 
     @ExceptionHandler(DuplicateReviewException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateReview(

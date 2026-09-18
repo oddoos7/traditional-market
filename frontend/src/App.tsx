@@ -46,6 +46,8 @@ import { StoreFormPage } from './pages/StoreFormPage'
 import { FavoritesPage } from './pages/FavoritesPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProductFormPage } from './pages/ProductFormPage'
+import { CartPage } from './pages/CartPage'
+import { CartHeaderLink } from './components/CartHeaderLink'
 import type {
   Market,
   MarketDetail,
@@ -97,6 +99,10 @@ function App() {
         <Route
           path="favorites"
           element={<RequireAuthRoute><FavoritesPage /></RequireAuthRoute>}
+        />
+        <Route
+          path="cart"
+          element={<RequireAuthRoute><CartPage /></RequireAuthRoute>}
         />
         <Route
           path="login"
@@ -177,6 +183,7 @@ function SiteLayout() {
               </span>
             ) : user ? (
               <>
+                <CartHeaderLink userId={user.id} />
                 <Link className="header-favorites" to="/favorites">
                   <Heart size={16} aria-hidden="true" />
                   <span>찜한 점포</span>
