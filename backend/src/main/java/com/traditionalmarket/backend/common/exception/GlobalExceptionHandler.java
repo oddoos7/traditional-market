@@ -22,7 +22,11 @@ import com.traditionalmarket.backend.order.exception.OrderNotFoundException;
 import com.traditionalmarket.backend.order.exception.OrderStockUnavailableException;
 import com.traditionalmarket.backend.payment.exception.PaymentAmountMismatchException;
 import com.traditionalmarket.backend.payment.exception.PaymentApprovalException;
+import com.traditionalmarket.backend.payment.exception.PaymentCancellationException;
+import com.traditionalmarket.backend.payment.exception.PaymentCancellationNotAllowedException;
 import com.traditionalmarket.backend.payment.exception.PaymentGatewayUnavailableException;
+import com.traditionalmarket.backend.payment.exception.PaymentLookupException;
+import com.traditionalmarket.backend.payment.exception.PaymentNotFoundException;
 import com.traditionalmarket.backend.payment.exception.PaymentNotConfiguredException;
 import com.traditionalmarket.backend.payment.exception.PaymentOrderNotPayableException;
 import com.traditionalmarket.backend.payment.exception.PaymentVerificationException;
@@ -61,6 +65,47 @@ public class GlobalExceptionHandler {
                 .body(new ApiErrorResponse(
                         "PAYMENT_APPROVAL_FAILED",
                         "%s (%s)".formatted(exception.getMessage(), exception.getProviderCode())
+                ));
+    }
+
+    @ExceptionHandler(PaymentCancellationException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentCancellation(
+            PaymentCancellationException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse(
+                        "PAYMENT_CANCELLATION_FAILED",
+                        "%s (%s)".formatted(exception.getMessage(), exception.getProviderCode())
+                ));
+    }
+
+    @ExceptionHandler(PaymentLookupException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentLookup(
+            PaymentLookupException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ApiErrorResponse(
+                        "PAYMENT_LOOKUP_FAILED",
+                        "%s (%s)".formatted(exception.getMessage(), exception.getProviderCode())
+                ));
+    }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentNotFound(
+            PaymentNotFoundException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("PAYMENT_NOT_FOUND", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentCancellationNotAllowedException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentCancellationNotAllowed(
+            PaymentCancellationNotAllowedException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse(
+                        "PAYMENT_CANCELLATION_NOT_ALLOWED",
+                        exception.getMessage()
                 ));
     }
 

@@ -136,4 +136,12 @@ public class PurchaseOrder extends BaseTimeEntity {
         this.status = OrderStatus.PAID;
         this.paidAt = paidAt;
     }
+
+    public void cancelPaidOrder(LocalDateTime canceledAt) {
+        if (status != OrderStatus.PAID || canceledAt == null) {
+            throw new IllegalStateException("결제가 완료된 주문만 환불 취소할 수 있습니다.");
+        }
+        this.status = OrderStatus.CANCELED;
+        this.canceledAt = canceledAt;
+    }
 }

@@ -14,7 +14,9 @@ public record PaymentConfirmResponse(
         PaymentStatus status,
         String method,
         BigDecimal amount,
+        BigDecimal balanceAmount,
         LocalDateTime approvedAt,
+        LocalDateTime canceledAt,
         String receiptUrl
 ) {
 
@@ -27,7 +29,9 @@ public record PaymentConfirmResponse(
                 payment.getStatus(),
                 payment.getMethod(),
                 payment.getAmount(),
+                payment.getBalanceAmount(),
                 payment.getApprovedAt(),
+                payment.getCanceledAt(),
                 payment.getReceiptUrl()
         );
     }

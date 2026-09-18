@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Route, Routes } from 'react-router-dom'
 import { cancelOrder, getOrder } from '../api/orderApi'
+import { cancelTossPayment } from '../api/paymentApi'
 import { useAuth } from '../auth/AuthContext'
 import { createOrderDetail } from '../test/orderFixtures'
 import { renderWithProviders, screen, userEvent, waitFor } from '../test/render'
@@ -14,12 +15,19 @@ vi.mock('../api/orderApi', () => ({
   },
 }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
+vi.mock('../api/paymentApi', () => ({
+  cancelTossPayment: vi.fn(),
+  PaymentApiError: class PaymentApiError extends Error {
+    constructor(message: string, public readonly status: number) { super(message) }
+  },
+}))
 vi.mock('../components/TossPaymentWidget', () => ({
   TossPaymentWidget: () => <button type="button">17,000원 결제하기</button>,
 }))
 
 const mockedGetOrder = vi.mocked(getOrder)
 const mockedCancelOrder = vi.mocked(cancelOrder)
+const mockedCancelTossPayment = vi.mocked(cancelTossPayment)
 const mockedUseAuth = vi.mocked(useAuth)
 
 function renderDetail() {
@@ -35,6 +43,7 @@ describe('OrderDetailPage', () => {
   beforeEach(() => {
     mockedGetOrder.mockReset()
     mockedCancelOrder.mockReset()
+    mockedCancelTossPayment.mockReset()
     mockedUseAuth.mockReturnValue({ user: { id: 1 } } as ReturnType<typeof useAuth>)
   })
 
@@ -60,6 +69,40 @@ describe('OrderDetailPage', () => {
 
     await user.click(await screen.findByRole('button', { name: '주문 취소' }))
     await waitFor(() => expect(mockedCancelOrder).toHaveBeenCalledWith(50))
+    expect(await screen.findByText('취소된 주문입니다')).toBeInTheDocument()
+  })
+
+  it('결제 완료 주문의 전액 결제를 취소하고 상태를 갱신한다', async () => {
+    const interaction = userEvent.setup()
+    mockedGetOrder.mockResolvedValue(createOrderDetail({
+      status: 'PAID',
+      paidAt: '2026-09-18T16:30:00',
+    }))
+    mockedCancelTossPayment.mockResolvedValue({
+      paymentId: 7,
+      orderId: 50,
+      orderNumber: 'ORD-TEST1234',
+      paymentKey: 'pay_key',
+      status: 'CANCELED',
+      amount: 17000,
+      balanceAmount: 0,
+      canceledAmount: 17000,
+      cancelReason: '구매자 요청',
+      transactionKey: 'cancel-transaction-1',
+      canceledAt: '2026-09-18T17:00:00',
+    })
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    renderDetail()
+
+    await interaction.type(
+      await screen.findByRole('textbox', { name: '결제 취소 사유' }),
+      '구매자 요청',
+    )
+    await interaction.click(screen.getByRole('button', { name: '테스트 결제 전액 취소' }))
+
+    await waitFor(() => expect(mockedCancelTossPayment).toHaveBeenCalledWith(50, {
+      cancelReason: '구매자 요청',
+    }))
     expect(await screen.findByText('취소된 주문입니다')).toBeInTheDocument()
   })
 })

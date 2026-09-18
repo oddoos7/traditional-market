@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchWithCsrf } from './authApi'
-import { confirmTossPayment, PaymentApiError } from './paymentApi'
+import { cancelTossPayment, confirmTossPayment, PaymentApiError } from './paymentApi'
 
 vi.mock('./authApi', () => ({ fetchWithCsrf: vi.fn() }))
 
@@ -39,5 +39,18 @@ describe('paymentApi', () => {
     const error = await confirmTossPayment(input).catch((caught) => caught)
     expect(error).toBeInstanceOf(PaymentApiError)
     expect(error).toMatchObject({ status: 409, code: 'PAYMENT_AMOUNT_MISMATCH' })
+  })
+
+  it('결제 완료 주문의 전액 취소 사유를 전송한다', async () => {
+    const result = { paymentId: 1, status: 'CANCELED' }
+    mockedFetchWithCsrf.mockResolvedValue(response(result))
+
+    await expect(cancelTossPayment(50, { cancelReason: '구매자 요청' }))
+      .resolves.toEqual(result)
+    expect(mockedFetchWithCsrf).toHaveBeenCalledWith('/payments/toss/orders/50/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cancelReason: '구매자 요청' }),
+    })
   })
 })

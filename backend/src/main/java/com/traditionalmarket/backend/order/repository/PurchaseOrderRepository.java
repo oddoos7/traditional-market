@@ -36,4 +36,22 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             @Param("orderNumber") String orderNumber,
             @Param("userId") Long userId
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT o
+            FROM PurchaseOrder o
+            WHERE o.id = :orderId
+              AND o.user.id = :userId
+            """)
+    Optional<PurchaseOrder> findByIdAndUserIdForUpdate(
+            @Param("orderId") Long orderId,
+            @Param("userId") Long userId
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM PurchaseOrder o WHERE o.orderNumber = :orderNumber")
+    Optional<PurchaseOrder> findByOrderNumberForUpdate(
+            @Param("orderNumber") String orderNumber
+    );
 }

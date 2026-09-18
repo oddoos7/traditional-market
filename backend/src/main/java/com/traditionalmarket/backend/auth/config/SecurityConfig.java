@@ -32,13 +32,17 @@ public class SecurityConfig {
     ) throws Exception {
         http
                 .csrf(csrf -> {
-                    csrf.ignoringRequestMatchers("/h2-console/**");
+                    csrf.ignoringRequestMatchers(
+                            "/h2-console/**",
+                            "/api/payments/toss/webhook"
+                    );
                     csrf.spa();
                 })
                 .securityContext(context -> context
                         .securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/payments/toss/webhook").permitAll()
                         .requestMatchers("/api/payments/**").authenticated()
                         .requestMatchers("/api/orders", "/api/orders/**").authenticated()
                         .requestMatchers("/api/cart", "/api/cart/**").authenticated()

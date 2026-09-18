@@ -22,6 +22,26 @@ export interface PaymentConfirmResponse {
   status: PaymentStatus
   method: string
   amount: number
+  balanceAmount: number
   approvedAt: string
+  canceledAt: string | null
   receiptUrl: string | null
+}
+
+export interface TossPaymentCancelInput {
+  cancelReason: string
+}
+
+export interface PaymentCancelResponse {
+  paymentId: number
+  orderId: number
+  orderNumber: string
+  paymentKey: string
+  status: PaymentStatus
+  amount: number
+  balanceAmount: number
+  canceledAmount: number
+  cancelReason: string
+  transactionKey: string
+  canceledAt: string
 }

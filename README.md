@@ -240,7 +240,7 @@ POST /api/orders/{orderId}/cancel
 - 주문자가 아닌 회원은 해당 주문을 조회하거나 취소할 수 없으며 존재하지 않는 주문과 동일하게 `ORDER_NOT_FOUND`를 반환합니다.
 - 빈 장바구니는 `EMPTY_CART`, 주문 시점의 판매 불가·재고 부족은 `ORDER_STOCK_UNAVAILABLE`, 취소할 수 없는 상태는 `ORDER_NOT_CANCELABLE` 코드로 응답합니다.
 
-재고는 주문 생성 시 결제 대기 수량으로 먼저 확보됩니다. 장시간 결제하지 않은 주문을 자동 만료해 재고를 복원하는 작업은 결제 웹훅·멱등성 단계에서 추가할 예정입니다.
+재고는 주문 생성 시 결제 대기 수량으로 먼저 확보됩니다. 결제 전 주문 취소 또는 결제 완료 후 전액 취소가 확정되면 재고를 한 번만 복원합니다. 장시간 결제하지 않은 주문을 자동 만료하는 스케줄러는 추후 운영 단계에서 추가할 수 있습니다.
 
 ### 토스페이먼츠 테스트 결제 API
 
@@ -248,6 +248,8 @@ POST /api/orders/{orderId}/cancel
 
 ```http
 POST /api/payments/toss/confirm
+POST /api/payments/toss/orders/{orderId}/cancel
+POST /api/payments/toss/webhook
 ```
 
 ```json
@@ -263,7 +265,30 @@ POST /api/payments/toss/confirm
 - `TOSS_PAYMENTS_SECRET_KEY`가 `test_`로 시작하지 않으면 외부 승인 요청을 차단합니다.
 - 승인 성공 시 `payments`에 결제 결과를 저장하고 주문 상태와 `paid_at`을 함께 갱신합니다.
 - 테스트 키로 진행한 결제는 실제 금액이 청구되지 않습니다.
-- 결제 취소, 웹훅 검증, 승인 재시도 멱등성은 다음 결제 안정화 단계에서 추가합니다.
+- 승인과 전액 취소 요청에는 주문·결제 식별자로 만든 안정적인 `Idempotency-Key`를 토스 API에 전달합니다. 서버 재시도나 브라우저 중복 요청이 발생해도 저장된 첫 결과를 재사용합니다.
+
+결제 전액 취소 요청 본문:
+
+```json
+{
+  "cancelReason": "구매자 요청"
+}
+```
+
+- 결제 취소는 본인의 `PAID` 주문만 가능하며 토스 취소 응답의 결제 키, 주문번호, 금액, 잔액과 취소 거래 키를 검증합니다.
+- 취소가 검증되면 `payment_cancellations`에 취소 거래를 저장하고 결제와 주문을 `CANCELED`로 변경한 뒤 재고를 정확히 한 번 복원합니다.
+- 사용자 API는 전액 취소만 제공합니다. 토스 조회 결과에서 부분 취소가 확인되면 결제 잔액과 취소 거래는 동기화하지만 주문 전체 취소나 재고 복원은 하지 않습니다.
+
+웹훅 URL은 다음 경로로 등록합니다.
+
+```text
+https://배포도메인/api/payments/toss/webhook
+```
+
+- 현재 처리 이벤트는 `PAYMENT_STATUS_CHANGED`이며 토스의 `tosspayments-webhook-transmission-id` 헤더가 필요합니다.
+- 일반 결제 웹훅에는 서명 헤더가 없으므로 수신 본문을 바로 신뢰하지 않습니다. `paymentKey`로 토스 결제 조회 API를 다시 호출하고 조회 결과만 DB에 반영합니다.
+- 처리한 전송 ID와 본문 지문을 `toss_webhook_events`에 저장하여 같은 웹훅 재전송을 중복 처리하지 않습니다.
+- 웹훅은 외부에서 접근할 수 있는 HTTPS 주소가 필요하므로 로컬 전용 주소는 등록할 수 없습니다.
 
 ### 회원가입·로그인 API
 

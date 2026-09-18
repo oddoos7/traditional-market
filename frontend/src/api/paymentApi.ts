@@ -1,12 +1,31 @@
 import { fetchWithCsrf } from './authApi'
 import type {
   PaymentConfirmResponse,
+  PaymentCancelResponse,
+  TossPaymentCancelInput,
   TossPaymentConfirmInput,
 } from '../types/payment'
 
 interface ApiErrorBody {
   code?: string
   message?: string
+}
+
+export async function cancelTossPayment(
+  orderId: number,
+  input: TossPaymentCancelInput,
+): Promise<PaymentCancelResponse> {
+  const response = await fetchWithCsrf(`/payments/toss/orders/${orderId}/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    throw await toPaymentApiError(response)
+  }
+
+  return response.json() as Promise<PaymentCancelResponse>
 }
 
 export class PaymentApiError extends Error {
@@ -30,7 +49,7 @@ async function toPaymentApiError(response: Response) {
   }
 
   return new PaymentApiError(
-    body.message || '결제 승인에 실패했습니다.',
+    body.message || '결제 요청을 처리하지 못했습니다.',
     response.status,
     body.code,
   )

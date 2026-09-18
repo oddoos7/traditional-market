@@ -14,10 +14,12 @@ import {
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { cancelOrder, getOrder, OrderApiError } from '../api/orderApi'
+import { cancelTossPayment, PaymentApiError } from '../api/paymentApi'
 import { useAuth } from '../auth/AuthContext'
 import { formatProductPrice } from '../constants/product'
 import { ORDER_STATUS_LABELS, formatOrderDate } from './OrdersPage'
 import { TossPaymentWidget } from '../components/TossPaymentWidget'
+import type { OrderDetail } from '../types/order'
 
 export function OrderDetailPage() {
   const { orderId: orderIdParam } = useParams()
@@ -26,6 +28,7 @@ export function OrderDetailPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [errorMessage, setErrorMessage] = useState('')
+  const [paymentCancelReason, setPaymentCancelReason] = useState('')
   const queryKey = ['order', user?.id, orderId] as const
 
   const orderQuery = useQuery({
@@ -50,6 +53,33 @@ export function OrderDetailPage() {
       setErrorMessage(error instanceof OrderApiError
         ? error.message
         : '주문을 취소하지 못했습니다. 다시 시도해주세요.')
+    },
+  })
+
+  const paymentCancelMutation = useMutation({
+    mutationFn: () => cancelTossPayment(orderId, {
+      cancelReason: paymentCancelReason.trim(),
+    }),
+    onSuccess: async (payment) => {
+      queryClient.setQueryData<OrderDetail>(queryKey, (current) => current
+        ? {
+            ...current,
+            status: 'CANCELED',
+            canceledAt: payment.canceledAt,
+          }
+        : current)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['product'] }),
+      ])
+      setPaymentCancelReason('')
+      setErrorMessage('')
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof PaymentApiError
+        ? error.message
+        : '결제를 취소하지 못했습니다. 결제 상태를 확인한 뒤 다시 시도해주세요.')
     },
   })
 
@@ -150,7 +180,7 @@ export function OrderDetailPage() {
           {order.status === 'PAID' && (
             <div className="order-action-box is-paid">
               <CheckCircle2 size={21} aria-hidden="true" />
-              <div><strong>결제가 완료됐어요</strong><p>점포에서 주문을 확인하고 있습니다.</p></div>
+              <div><strong>결제가 완료됐어요</strong><p>필요한 경우 아래에서 테스트 결제를 취소할 수 있습니다.</p></div>
             </div>
           )}
           {order.status === 'CANCELED' && (
@@ -185,6 +215,38 @@ export function OrderDetailPage() {
               </button>
               <small>왼쪽 결제수단을 선택한 뒤 테스트 결제를 진행해주세요.</small>
             </>
+          )}
+
+          {order.status === 'PAID' && (
+            <div className="payment-cancel-controls">
+              <label htmlFor="payment-cancel-reason">결제 취소 사유</label>
+              <textarea
+                id="payment-cancel-reason"
+                value={paymentCancelReason}
+                maxLength={200}
+                rows={3}
+                placeholder="예: 구매자 요청"
+                disabled={paymentCancelMutation.isPending}
+                onChange={(event) => setPaymentCancelReason(event.target.value)}
+              />
+              <span>{paymentCancelReason.length}/200</span>
+              <button
+                className="payment-cancel-button"
+                type="button"
+                disabled={!paymentCancelReason.trim() || paymentCancelMutation.isPending}
+                onClick={() => {
+                  if (window.confirm('결제를 전액 취소하고 상품 재고를 복원할까요?')) {
+                    paymentCancelMutation.mutate()
+                  }
+                }}
+              >
+                {paymentCancelMutation.isPending
+                  ? <LoaderCircle className="spin" size={16} aria-hidden="true" />
+                  : null}
+                {paymentCancelMutation.isPending ? '결제 취소 중' : '테스트 결제 전액 취소'}
+              </button>
+              <small>동일한 취소 요청이 반복되어도 한 번만 처리됩니다.</small>
+            </div>
           )}
         </aside>
       </div>

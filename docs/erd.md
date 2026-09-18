@@ -1,6 +1,6 @@
 # 전통시장 ERD
 
-현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품, 장바구니, 주문과 결제로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V5` 마이그레이션입니다.
+현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품, 장바구니, 주문과 결제로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V6` 마이그레이션입니다.
 
 ```mermaid
 erDiagram
@@ -18,6 +18,7 @@ erDiagram
     ORDERS ||--|{ ORDER_ITEMS : contains
     PRODUCTS ||--o{ ORDER_ITEMS : snapshots
     ORDERS ||--o| PAYMENTS : paid_by
+    PAYMENTS ||--o{ PAYMENT_CANCELLATIONS : has
 
     MARKETS {
         BIGINT id PK
@@ -142,11 +143,40 @@ erDiagram
         BIGINT order_id FK,UK "결제 주문"
         VARCHAR_20 provider "TOSS"
         VARCHAR_200 payment_key UK "PG 결제 식별키"
+        VARCHAR_80 confirmation_idempotency_key UK "승인 멱등키"
         VARCHAR_30 status "DONE 등 PG 상태"
         VARCHAR_50 method "카드, 간편결제 등"
         DECIMAL_18_2 amount "승인 금액"
+        DECIMAL_18_2 balance_amount "취소 가능한 잔액"
         DATETIME approved_at "PG 승인일시"
+        DATETIME canceled_at "최근 취소일시"
         VARCHAR_500 receipt_url "영수증 URL"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
+
+    PAYMENT_CANCELLATIONS {
+        BIGINT id PK
+        BIGINT payment_id FK "원 결제"
+        VARCHAR_64 transaction_key UK "토스 취소 거래 키"
+        VARCHAR_80 idempotency_key UK "취소 멱등키"
+        DECIMAL_18_2 cancel_amount "취소 금액"
+        DECIMAL_18_2 refundable_amount "취소 후 잔액"
+        VARCHAR_200 cancel_reason "취소 사유"
+        VARCHAR_20 cancel_status "DONE"
+        DATETIME canceled_at "취소일시"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
+
+    TOSS_WEBHOOK_EVENTS {
+        BIGINT id PK
+        VARCHAR_100 transmission_id UK "토스 전송 ID"
+        VARCHAR_50 event_type "이벤트 유형"
+        VARCHAR_200 payment_key "결제 식별키"
+        VARCHAR_64 payload_hash "본문 지문"
+        VARCHAR_30 result "APPLIED, NO_CHANGE, IGNORED"
+        DATETIME processed_at "처리 완료일시"
         DATETIME created_at "생성일시"
         DATETIME updated_at "수정일시"
     }
@@ -181,3 +211,6 @@ erDiagram
 - 주문 생성 상태는 `PENDING_PAYMENT`이며, 토스페이먼츠 승인 검증이 완료되면 `PAID`로 전환하고 `paid_at`을 기록합니다. 결제 전 주문만 직접 취소할 수 있습니다.
 - 주문과 결제는 현재 1:0..1 관계이며 `uk_payments_order`로 주문당 결제 행 하나, `uk_payments_payment_key`로 동일 PG 결제 키의 중복 저장을 차단합니다.
 - 결제 승인 요청은 주문 DB 금액과 토스 승인 응답의 주문번호·금액·상태·결제 키를 모두 대조한 뒤 주문과 결제를 같은 DB 트랜잭션에 저장합니다.
+- 결제 승인과 전액 취소는 토스 API의 `Idempotency-Key`와 로컬 유일 제약을 함께 사용하여 중복 외부 요청 및 중복 저장을 방지합니다.
+- 결제 취소 이력은 토스 `transaction_key`마다 한 행으로 저장하고, 전액 취소가 처음 반영될 때만 주문 상품 재고를 복원합니다.
+- 일반 결제 웹훅은 서명 헤더가 제공되지 않으므로 토스 결제 조회 API 결과로 다시 검증합니다. 처리한 `transmission_id`에는 유일 제약을 적용해 재전송을 멱등하게 처리합니다.

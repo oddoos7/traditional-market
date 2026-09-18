@@ -34,7 +34,9 @@ describe('PaymentSuccessPage', () => {
       status: 'DONE',
       method: '카드',
       amount: 17000,
+      balanceAmount: 17000,
       approvedAt: '2026-09-18T16:30:00',
+      canceledAt: null,
       receiptUrl: 'https://example.com/receipt',
     })
     renderSuccess()
