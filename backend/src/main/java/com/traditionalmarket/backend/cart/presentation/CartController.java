@@ -19,6 +19,8 @@ import com.traditionalmarket.backend.cart.dto.request.CartItemAddRequest;
 import com.traditionalmarket.backend.cart.dto.request.CartItemQuantityRequest;
 import com.traditionalmarket.backend.cart.dto.response.CartResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -27,17 +29,20 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/cart")
+@Tag(name = "장바구니", description = "로그인 회원의 장바구니 API")
 public class CartController {
 
     private final CartService cartService;
 
     @GetMapping
+    @Operation(summary = "장바구니 조회")
     public CartResponse getCart(Principal principal) {
         return cartService.getCart(principal.getName());
     }
 
     @PostMapping("/items")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "장바구니 상품 추가")
     public CartResponse addItem(
             Principal principal,
             @Valid @RequestBody CartItemAddRequest request
@@ -50,6 +55,7 @@ public class CartController {
     }
 
     @PutMapping("/items/{cartItemId}")
+    @Operation(summary = "장바구니 상품 수량 변경")
     public CartResponse updateQuantity(
             Principal principal,
             @PathVariable @Positive Long cartItemId,
@@ -63,6 +69,7 @@ public class CartController {
     }
 
     @DeleteMapping("/items/{cartItemId}")
+    @Operation(summary = "장바구니 상품 삭제")
     public CartResponse removeItem(
             Principal principal,
             @PathVariable @Positive Long cartItemId
@@ -71,6 +78,7 @@ public class CartController {
     }
 
     @DeleteMapping
+    @Operation(summary = "장바구니 전체 비우기")
     public CartResponse clearCart(Principal principal) {
         return cartService.clearCart(principal.getName());
     }

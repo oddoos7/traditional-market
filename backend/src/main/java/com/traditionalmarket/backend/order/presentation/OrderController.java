@@ -16,6 +16,8 @@ import com.traditionalmarket.backend.order.application.OrderService;
 import com.traditionalmarket.backend.order.dto.response.OrderDetailResponse;
 import com.traditionalmarket.backend.order.dto.response.OrderSummaryResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 
@@ -23,22 +25,26 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")
+@Tag(name = "주문", description = "주문 생성, 조회 및 결제 전 주문 취소 API")
 public class OrderController {
 
     private final OrderService orderService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "장바구니로 주문 생성")
     public OrderDetailResponse createOrder(Principal principal) {
         return orderService.createOrder(principal.getName());
     }
 
     @GetMapping
+    @Operation(summary = "내 주문 목록 조회")
     public List<OrderSummaryResponse> getOrders(Principal principal) {
         return orderService.getOrders(principal.getName());
     }
 
     @GetMapping("/{orderId}")
+    @Operation(summary = "내 주문 상세 조회")
     public OrderDetailResponse getOrder(
             Principal principal,
             @PathVariable @Positive Long orderId
@@ -47,6 +53,7 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/cancel")
+    @Operation(summary = "결제 전 주문 취소")
     public OrderDetailResponse cancelOrder(
             Principal principal,
             @PathVariable @Positive Long orderId

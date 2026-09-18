@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.traditionalmarket.backend.cart.exception.CartItemNotFoundException;
 import com.traditionalmarket.backend.cart.exception.CartProductUnavailableException;
@@ -40,6 +42,8 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(PaymentNotConfiguredException.class)
     public ResponseEntity<ApiErrorResponse> handlePaymentNotConfigured(
@@ -294,6 +298,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable() {
         return badRequest("요청 본문의 형식 또는 값이 올바르지 않습니다.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception exception) {
+        log.error("처리하지 못한 서버 예외가 발생했습니다.", exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiErrorResponse(
+                        "INTERNAL_SERVER_ERROR",
+                        "서버에서 요청을 처리하는 중 오류가 발생했습니다."
+                ));
     }
 
     private ResponseEntity<ApiErrorResponse> badRequest(String message) {

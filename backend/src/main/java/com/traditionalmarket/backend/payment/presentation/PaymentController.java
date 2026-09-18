@@ -19,6 +19,8 @@ import com.traditionalmarket.backend.payment.dto.response.PaymentCancelResponse;
 import com.traditionalmarket.backend.payment.dto.response.PaymentConfirmResponse;
 import com.traditionalmarket.backend.payment.dto.response.TossWebhookResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -29,12 +31,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payments/toss")
+@Tag(name = "결제", description = "토스페이먼츠 결제 승인, 취소 및 웹훅 API")
 public class PaymentController {
 
     private final PaymentService paymentService;
     private final TossPaymentWebhookService tossPaymentWebhookService;
 
     @PostMapping("/confirm")
+    @Operation(summary = "토스 결제 승인")
     public PaymentConfirmResponse confirm(
             Principal principal,
             @Valid @RequestBody TossPaymentConfirmRequest request
@@ -43,6 +47,7 @@ public class PaymentController {
     }
 
     @PostMapping("/orders/{orderId}/cancel")
+    @Operation(summary = "토스 결제 전액 취소")
     public PaymentCancelResponse cancel(
             Principal principal,
             @PathVariable @Positive Long orderId,
@@ -52,6 +57,7 @@ public class PaymentController {
     }
 
     @PostMapping("/webhook")
+    @Operation(summary = "토스 결제 상태 웹훅 수신")
     public TossWebhookResponse webhook(
             @RequestHeader("tosspayments-webhook-transmission-id")
             @NotBlank

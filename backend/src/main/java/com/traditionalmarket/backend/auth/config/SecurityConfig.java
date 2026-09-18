@@ -42,6 +42,11 @@ public class SecurityConfig {
                         .securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
                         .requestMatchers("/api/payments/toss/webhook").permitAll()
                         .requestMatchers("/api/payments/**").authenticated()
                         .requestMatchers("/api/orders", "/api/orders/**").authenticated()

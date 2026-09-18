@@ -20,6 +20,8 @@ import com.traditionalmarket.backend.product.dto.request.ProductSaveRequest;
 import com.traditionalmarket.backend.product.dto.response.ProductDetailResponse;
 import com.traditionalmarket.backend.product.dto.response.ProductPageResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -30,12 +32,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/stores/{storeId}/products")
+@Tag(name = "상품", description = "점포 상품 조회 및 관리자 등록·수정 API")
 public class ProductController {
 
     private final ProductQueryService productQueryService;
     private final ProductCommandService productCommandService;
 
     @GetMapping
+    @Operation(summary = "점포 상품 목록 조회")
     public ProductPageResponse getProducts(
             @PathVariable @Positive Long storeId,
             @RequestParam(required = false) String keyword,
@@ -48,6 +52,7 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}")
+    @Operation(summary = "점포 상품 상세 조회")
     public ProductDetailResponse getProduct(
             @PathVariable @Positive Long storeId,
             @PathVariable @Positive Long productId
@@ -57,6 +62,7 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "점포 상품 등록")
     public ProductDetailResponse createProduct(
             @PathVariable @Positive Long storeId,
             @Valid @RequestBody ProductSaveRequest request
@@ -65,6 +71,7 @@ public class ProductController {
     }
 
     @PutMapping("/{productId}")
+    @Operation(summary = "점포 상품 수정")
     public ProductDetailResponse updateProduct(
             @PathVariable @Positive Long storeId,
             @PathVariable @Positive Long productId,

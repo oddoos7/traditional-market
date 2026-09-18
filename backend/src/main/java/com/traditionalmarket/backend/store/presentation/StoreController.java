@@ -21,6 +21,8 @@ import com.traditionalmarket.backend.store.dto.request.StoreSaveRequest;
 import com.traditionalmarket.backend.store.dto.response.StoreDetailResponse;
 import com.traditionalmarket.backend.store.dto.response.StorePageResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -31,12 +33,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/markets/{marketId}/stores")
+@Tag(name = "점포", description = "시장별 점포 조회 및 관리자 등록·수정 API")
 public class StoreController {
 
     private final StoreQueryService storeQueryService;
     private final StoreCommandService storeCommandService;
 
     @GetMapping
+    @Operation(summary = "시장 점포 목록 조회")
     public StorePageResponse getStores(
             @PathVariable @Positive Long marketId,
             @RequestParam(required = false) String keyword,
@@ -58,6 +62,7 @@ public class StoreController {
     }
 
     @GetMapping("/{storeId}")
+    @Operation(summary = "시장 점포 상세 조회")
     public StoreDetailResponse getStore(
             @PathVariable @Positive Long marketId,
             @PathVariable @Positive Long storeId
@@ -67,6 +72,7 @@ public class StoreController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "시장 점포 등록")
     public StoreDetailResponse createStore(
             @PathVariable @Positive Long marketId,
             @Valid @RequestBody StoreSaveRequest request
@@ -75,6 +81,7 @@ public class StoreController {
     }
 
     @PutMapping("/{storeId}")
+    @Operation(summary = "시장 점포 수정")
     public StoreDetailResponse updateStore(
             @PathVariable @Positive Long marketId,
             @PathVariable @Positive Long storeId,

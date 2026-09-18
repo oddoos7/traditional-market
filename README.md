@@ -329,6 +329,22 @@ POST /api/auth/logout
 - 누락되거나 잘못된 CSRF 토큰: HTTP 403, `INVALID_CSRF_TOKEN`
 - 인증된 사용자의 권한 부족: HTTP 403, `ACCESS_DENIED`
 
+## Swagger·로그·CI
+
+백엔드를 실행하면 다음 주소에서 OpenAPI 문서와 Swagger UI를 확인할 수 있습니다.
+
+```text
+http://localhost:8080/swagger-ui.html
+http://localhost:8080/v3/api-docs
+```
+
+- API는 시장, 점포, 상품, 리뷰, 찜, 장바구니, 주문, 결제와 인증 태그로 구분됩니다.
+- Swagger UI에서 데이터 변경 API를 호출하려면 먼저 `GET /api/auth/csrf`를 호출합니다. Swagger UI의 CSRF 지원이 활성화되어 표준 `XSRF-TOKEN` 쿠키를 이후 요청의 `X-XSRF-TOKEN` 헤더로 전달합니다.
+- 모든 HTTP 응답에는 `X-Request-Id`가 포함됩니다. 클라이언트가 안전한 형식의 요청 ID를 보내면 유지하고, 없거나 올바르지 않으면 서버가 UUID를 발급합니다.
+- 요청 로그에는 요청 ID, HTTP 메서드, 경로, 응답 상태와 처리 시간이 기록됩니다. 요청 본문, 비밀번호, 세션 쿠키와 결제 키는 기록하지 않습니다.
+- 예상하지 못한 서버 오류는 전체 예외를 서버 로그에 기록하되 클라이언트에는 `INTERNAL_SERVER_ERROR` 표준 응답만 반환합니다.
+- `.github/workflows/ci.yml`은 `main` 브랜치 push와 pull request에서 Java 17 백엔드 전체 테스트, Node.js 22 프론트엔드 테스트와 프로덕션 빌드를 자동 실행합니다.
+
 ## 빌드 및 테스트
 
 ```bash

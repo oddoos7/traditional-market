@@ -20,6 +20,8 @@ import com.traditionalmarket.backend.market.dto.request.MarketSaveRequest;
 import com.traditionalmarket.backend.market.dto.response.MarketDetailResponse;
 import com.traditionalmarket.backend.market.dto.response.MarketPageResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -30,12 +32,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/markets")
+@Tag(name = "시장", description = "전통시장 조회 및 관리자 등록·수정 API")
 public class MarketController {
 
     private final MarketQueryService marketQueryService;
     private final MarketCommandService marketCommandService;
 
     @GetMapping
+    @Operation(summary = "시장 목록 조회")
     public MarketPageResponse getMarkets(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) MarketStatus status,
@@ -47,6 +51,7 @@ public class MarketController {
     }
 
     @GetMapping("/{marketId}")
+    @Operation(summary = "시장 상세 조회")
     public MarketDetailResponse getMarket(
             @PathVariable @Positive Long marketId
     ) {
@@ -55,6 +60,7 @@ public class MarketController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "시장 등록")
     public MarketDetailResponse createMarket(
             @Valid @RequestBody MarketSaveRequest request
     ) {
@@ -62,6 +68,7 @@ public class MarketController {
     }
 
     @PutMapping("/{marketId}")
+    @Operation(summary = "시장 수정")
     public MarketDetailResponse updateMarket(
             @PathVariable @Positive Long marketId,
             @Valid @RequestBody MarketSaveRequest request
