@@ -51,6 +51,8 @@ import { CartHeaderLink } from './components/CartHeaderLink'
 import { OrderHeaderLink } from './components/OrderHeaderLink'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
+import { PaymentSuccessPage } from './pages/PaymentSuccessPage'
+import { PaymentFailPage } from './pages/PaymentFailPage'
 import type {
   Market,
   MarketDetail,
@@ -114,6 +116,14 @@ function App() {
         <Route
           path="orders/:orderId"
           element={<RequireAuthRoute><OrderDetailPage /></RequireAuthRoute>}
+        />
+        <Route
+          path="payments/toss/success"
+          element={<RequireAuthRoute><PaymentSuccessPage /></RequireAuthRoute>}
+        />
+        <Route
+          path="payments/toss/fail"
+          element={<RequireAuthRoute><PaymentFailPage /></RequireAuthRoute>}
         />
         <Route
           path="login"

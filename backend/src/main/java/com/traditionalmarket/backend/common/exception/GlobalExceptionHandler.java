@@ -20,6 +20,12 @@ import com.traditionalmarket.backend.order.exception.EmptyCartException;
 import com.traditionalmarket.backend.order.exception.OrderNotCancelableException;
 import com.traditionalmarket.backend.order.exception.OrderNotFoundException;
 import com.traditionalmarket.backend.order.exception.OrderStockUnavailableException;
+import com.traditionalmarket.backend.payment.exception.PaymentAmountMismatchException;
+import com.traditionalmarket.backend.payment.exception.PaymentApprovalException;
+import com.traditionalmarket.backend.payment.exception.PaymentGatewayUnavailableException;
+import com.traditionalmarket.backend.payment.exception.PaymentNotConfiguredException;
+import com.traditionalmarket.backend.payment.exception.PaymentOrderNotPayableException;
+import com.traditionalmarket.backend.payment.exception.PaymentVerificationException;
 import com.traditionalmarket.backend.product.exception.ProductNotFoundException;
 import com.traditionalmarket.backend.review.exception.DuplicateReviewException;
 import com.traditionalmarket.backend.review.exception.ReviewNotFoundException;
@@ -30,6 +36,57 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(PaymentNotConfiguredException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentNotConfigured(
+            PaymentNotConfiguredException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiErrorResponse("PAYMENT_NOT_CONFIGURED", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentGatewayUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentGatewayUnavailable(
+            PaymentGatewayUnavailableException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ApiErrorResponse("PAYMENT_GATEWAY_UNAVAILABLE", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentApprovalException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentApproval(
+            PaymentApprovalException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse(
+                        "PAYMENT_APPROVAL_FAILED",
+                        "%s (%s)".formatted(exception.getMessage(), exception.getProviderCode())
+                ));
+    }
+
+    @ExceptionHandler(PaymentAmountMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentAmountMismatch(
+            PaymentAmountMismatchException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("PAYMENT_AMOUNT_MISMATCH", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentOrderNotPayableException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentOrderNotPayable(
+            PaymentOrderNotPayableException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("PAYMENT_ORDER_NOT_PAYABLE", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentVerificationException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentVerification(
+            PaymentVerificationException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ApiErrorResponse("PAYMENT_VERIFICATION_FAILED", exception.getMessage()));
+    }
 
     @ExceptionHandler(EmptyCartException.class)
     public ResponseEntity<ApiErrorResponse> handleEmptyCart(EmptyCartException exception) {

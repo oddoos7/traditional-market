@@ -23,6 +23,7 @@ export function createOrderDetail(overrides: Partial<OrderDetail> = {}): OrderDe
     totalItemCount: 2,
     totalAmount: 17000,
     canceledAt: null,
+    paidAt: null,
     createdAt: '2026-09-18T15:30:00',
     updatedAt: '2026-09-18T15:30:00',
     ...overrides,

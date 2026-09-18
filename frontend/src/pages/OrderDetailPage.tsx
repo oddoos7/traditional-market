@@ -17,6 +17,7 @@ import { cancelOrder, getOrder, OrderApiError } from '../api/orderApi'
 import { useAuth } from '../auth/AuthContext'
 import { formatProductPrice } from '../constants/product'
 import { ORDER_STATUS_LABELS, formatOrderDate } from './OrdersPage'
+import { TossPaymentWidget } from '../components/TossPaymentWidget'
 
 export function OrderDetailPage() {
   const { orderId: orderIdParam } = useParams()
@@ -124,6 +125,9 @@ export function OrderDetailPage() {
               </article>
             ))}
           </div>
+          {order.status === 'PENDING_PAYMENT' && user && (
+            <TossPaymentWidget order={order} user={user} />
+          )}
         </section>
 
         <aside className="order-payment-panel" aria-labelledby="order-payment-title">
@@ -164,9 +168,6 @@ export function OrderDetailPage() {
 
           {order.status === 'PENDING_PAYMENT' && (
             <>
-              <button className="order-pay-button" type="button" disabled>
-                테스트 결제 준비 중
-              </button>
               <button
                 className="order-cancel-button"
                 type="button"
@@ -182,7 +183,7 @@ export function OrderDetailPage() {
                   : null}
                 {cancelMutation.isPending ? '취소 처리 중' : '주문 취소'}
               </button>
-              <small>결제 기능은 다음 단계에서 토스페이먼츠 테스트 모드로 연결됩니다.</small>
+              <small>왼쪽 결제수단을 선택한 뒤 테스트 결제를 진행해주세요.</small>
             </>
           )}
         </aside>

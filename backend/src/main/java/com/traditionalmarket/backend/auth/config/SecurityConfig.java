@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/payments/**").authenticated()
                         .requestMatchers("/api/orders", "/api/orders/**").authenticated()
                         .requestMatchers("/api/cart", "/api/cart/**").authenticated()
                         .requestMatchers("/api/favorites/**").authenticated()

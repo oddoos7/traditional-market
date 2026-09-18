@@ -5,8 +5,13 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.traditionalmarket.backend.order.domain.PurchaseOrder;
+
+import jakarta.persistence.LockModeType;
 
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
@@ -19,4 +24,16 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             "items"
     })
     Optional<PurchaseOrder> findByIdAndUserId(Long orderId, Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT o
+            FROM PurchaseOrder o
+            WHERE o.orderNumber = :orderNumber
+              AND o.user.id = :userId
+            """)
+    Optional<PurchaseOrder> findByOrderNumberAndUserIdForUpdate(
+            @Param("orderNumber") String orderNumber,
+            @Param("userId") Long userId
+    );
 }

@@ -17,6 +17,7 @@ const SESSION_SCOPED_QUERY_NAMES = new Set([
   'cart',
   'orders',
   'order',
+  'payment-confirm',
 ])
 
 interface AuthContextValue {

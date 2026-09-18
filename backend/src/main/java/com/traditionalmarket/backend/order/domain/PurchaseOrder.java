@@ -83,6 +83,8 @@ public class PurchaseOrder extends BaseTimeEntity {
 
     private LocalDateTime canceledAt;
 
+    private LocalDateTime paidAt;
+
     @OrderBy("id ASC")
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
@@ -125,5 +127,13 @@ public class PurchaseOrder extends BaseTimeEntity {
         }
         this.status = OrderStatus.CANCELED;
         this.canceledAt = canceledAt;
+    }
+
+    public void markPaid(LocalDateTime paidAt) {
+        if (status != OrderStatus.PENDING_PAYMENT || paidAt == null) {
+            throw new IllegalStateException("결제 대기 중인 주문만 결제 완료할 수 있습니다.");
+        }
+        this.status = OrderStatus.PAID;
+        this.paidAt = paidAt;
     }
 }

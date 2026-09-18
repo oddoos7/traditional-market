@@ -26,5 +26,6 @@ export interface OrderSummary {
 export interface OrderDetail extends OrderSummary {
   items: OrderItem[]
   canceledAt: string | null
+  paidAt: string | null
   updatedAt: string
 }

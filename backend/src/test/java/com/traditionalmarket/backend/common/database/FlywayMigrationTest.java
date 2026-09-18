@@ -26,9 +26,9 @@ class FlywayMigrationTest {
         MigrationInfo current = flyway.info().current();
 
         assertNotNull(current);
-        assertEquals("4", current.getVersion().getVersion());
-        assertEquals(4, countSuccessfulMigrations());
-        assertEquals(10, countDomainTables());
+        assertEquals("5", current.getVersion().getVersion());
+        assertEquals(5, countSuccessfulMigrations());
+        assertEquals(11, countDomainTables());
     }
 
     private int countSuccessfulMigrations() {
@@ -60,7 +60,8 @@ class FlywayMigrationTest {
                       'carts',
                       'cart_items',
                       'orders',
-                      'order_items'
+                      'order_items',
+                      'payments'
                   )
                 """,
                 Integer.class

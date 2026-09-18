@@ -19,6 +19,7 @@ public record OrderDetailResponse(
         int totalItemCount,
         BigDecimal totalAmount,
         LocalDateTime canceledAt,
+        LocalDateTime paidAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -36,6 +37,7 @@ public record OrderDetailResponse(
                 order.getTotalItemCount(),
                 order.getTotalAmount(),
                 order.getCanceledAt(),
+                order.getPaidAt(),
                 order.getCreatedAt(),
                 order.getUpdatedAt()
         );

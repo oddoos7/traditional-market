@@ -14,6 +14,9 @@ vi.mock('../api/orderApi', () => ({
   },
 }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
+vi.mock('../components/TossPaymentWidget', () => ({
+  TossPaymentWidget: () => <button type="button">17,000원 결제하기</button>,
+}))
 
 const mockedGetOrder = vi.mocked(getOrder)
 const mockedCancelOrder = vi.mocked(cancelOrder)
@@ -42,7 +45,7 @@ describe('OrderDetailPage', () => {
     expect(await screen.findByRole('heading', { name: '주문 상세' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '새콤달콤 사과 1kg' })).toBeInTheDocument()
     expect(screen.getByText('현재 상품 재고가 주문 수량만큼 확보되었습니다.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '테스트 결제 준비 중' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '17,000원 결제하기' })).toBeEnabled()
   })
 
   it('결제 대기 주문을 취소하고 상태를 갱신한다', async () => {

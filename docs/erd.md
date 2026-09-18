@@ -1,6 +1,6 @@
 # 전통시장 ERD
 
-현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품, 장바구니와 주문으로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V4` 마이그레이션입니다.
+현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품, 장바구니, 주문과 결제로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V5` 마이그레이션입니다.
 
 ```mermaid
 erDiagram
@@ -17,6 +17,7 @@ erDiagram
     STORES ||--o{ ORDERS : receives
     ORDERS ||--|{ ORDER_ITEMS : contains
     PRODUCTS ||--o{ ORDER_ITEMS : snapshots
+    ORDERS ||--o| PAYMENTS : paid_by
 
     MARKETS {
         BIGINT id PK
@@ -118,6 +119,7 @@ erDiagram
         INT total_item_count "총 주문 수량"
         DECIMAL_18_2 total_amount "총 주문 금액"
         DATETIME canceled_at "취소일시"
+        DATETIME paid_at "결제 승인일시"
         DATETIME created_at "주문일시"
         DATETIME updated_at "수정일시"
     }
@@ -131,6 +133,20 @@ erDiagram
         DECIMAL_12_2 unit_price "주문 시점 단가"
         INT quantity "주문 수량, 1~99"
         DECIMAL_18_2 line_amount "상품별 합계"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
+
+    PAYMENTS {
+        BIGINT id PK
+        BIGINT order_id FK,UK "결제 주문"
+        VARCHAR_20 provider "TOSS"
+        VARCHAR_200 payment_key UK "PG 결제 식별키"
+        VARCHAR_30 status "DONE 등 PG 상태"
+        VARCHAR_50 method "카드, 간편결제 등"
+        DECIMAL_18_2 amount "승인 금액"
+        DATETIME approved_at "PG 승인일시"
+        VARCHAR_500 receipt_url "영수증 URL"
         DATETIME created_at "생성일시"
         DATETIME updated_at "수정일시"
     }
@@ -162,4 +178,6 @@ erDiagram
 - 주문은 사용자와 점포를 참조하고, 상품명·이미지·단가를 주문 상품에 스냅샷으로 저장하여 이후 상품 정보가 바뀌어도 주문 당시 내역을 유지합니다.
 - 주문 생성 시 상품 행을 ID 오름차순으로 비관적 잠금한 뒤 최신 재고를 확인하고 차감하여 동시 주문의 초과 판매를 방지합니다.
 - 재고가 0이 되면 상품 상태를 `SOLD_OUT`으로 바꾸고, 결제 대기 주문을 취소해 재고가 복원되면 다시 `ON_SALE`로 전환합니다.
-- 현재 주문 생성 상태는 `PENDING_PAYMENT`이며, 결제 전 취소만 허용합니다. `PAID` 전환은 토스페이먼츠 결제 승인 단계에서 연결합니다.
+- 주문 생성 상태는 `PENDING_PAYMENT`이며, 토스페이먼츠 승인 검증이 완료되면 `PAID`로 전환하고 `paid_at`을 기록합니다. 결제 전 주문만 직접 취소할 수 있습니다.
+- 주문과 결제는 현재 1:0..1 관계이며 `uk_payments_order`로 주문당 결제 행 하나, `uk_payments_payment_key`로 동일 PG 결제 키의 중복 저장을 차단합니다.
+- 결제 승인 요청은 주문 DB 금액과 토스 승인 응답의 주문번호·금액·상태·결제 키를 모두 대조한 뒤 주문과 결제를 같은 DB 트랜잭션에 저장합니다.
