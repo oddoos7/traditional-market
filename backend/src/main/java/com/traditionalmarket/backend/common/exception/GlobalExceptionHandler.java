@@ -16,6 +16,10 @@ import com.traditionalmarket.backend.cart.exception.CartQuantityExceededExceptio
 import com.traditionalmarket.backend.cart.exception.CartStoreMismatchException;
 import com.traditionalmarket.backend.common.response.ApiErrorResponse;
 import com.traditionalmarket.backend.market.exception.MarketNotFoundException;
+import com.traditionalmarket.backend.order.exception.EmptyCartException;
+import com.traditionalmarket.backend.order.exception.OrderNotCancelableException;
+import com.traditionalmarket.backend.order.exception.OrderNotFoundException;
+import com.traditionalmarket.backend.order.exception.OrderStockUnavailableException;
 import com.traditionalmarket.backend.product.exception.ProductNotFoundException;
 import com.traditionalmarket.backend.review.exception.DuplicateReviewException;
 import com.traditionalmarket.backend.review.exception.ReviewNotFoundException;
@@ -26,6 +30,36 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(EmptyCartException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmptyCart(EmptyCartException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("EMPTY_CART", exception.getMessage()));
+    }
+
+    @ExceptionHandler(OrderStockUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderStockUnavailable(
+            OrderStockUnavailableException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("ORDER_STOCK_UNAVAILABLE", exception.getMessage()));
+    }
+
+    @ExceptionHandler(OrderNotCancelableException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderNotCancelable(
+            OrderNotCancelableException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("ORDER_NOT_CANCELABLE", exception.getMessage()));
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderNotFound(
+            OrderNotFoundException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("ORDER_NOT_FOUND", exception.getMessage()));
+    }
 
     @ExceptionHandler(CartItemNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleCartItemNotFound(

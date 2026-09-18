@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CartApiError,
   clearCart,
@@ -22,12 +22,14 @@ import {
   updateCartItemQuantity,
 } from '../api/cartApi'
 import { useAuth } from '../auth/AuthContext'
+import { createOrder, OrderApiError } from '../api/orderApi'
 import { formatProductPrice, PRODUCT_STATUS_LABELS } from '../constants/product'
 import type { Cart, CartItem } from '../types/cart'
 
 export function CartPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [errorMessage, setErrorMessage] = useState('')
   const cartQueryKey = ['cart', user?.id] as const
   const cartQuery = useQuery({
@@ -66,6 +68,20 @@ export function CartPage() {
     onError: (error) => setErrorMessage(toCartMessage(error)),
   })
 
+  const orderMutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: async (order) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['cart'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['product'] }),
+      ])
+      navigate(`/orders/${order.id}`)
+    },
+    onError: (error) => setErrorMessage(toOrderMessage(error)),
+  })
+
   useEffect(() => {
     document.title = '장바구니 | 우리동네 전통시장'
   }, [])
@@ -74,6 +90,7 @@ export function CartPage() {
   const isMutating = updateMutation.isPending
     || removeMutation.isPending
     || clearMutation.isPending
+    || orderMutation.isPending
 
   return (
     <main className="cart-main">
@@ -194,15 +211,38 @@ export function CartPage() {
                 품절 또는 재고 부족 상품을 삭제하거나 수량을 조정해주세요.
               </p>
             )}
-            <button type="button" disabled>
-              주문 기능 준비 중
+            <button
+              type="button"
+              disabled={!cart.orderable || isMutating}
+              onClick={() => {
+                setErrorMessage('')
+                orderMutation.mutate()
+              }}
+            >
+              {orderMutation.isPending
+                ? <><LoaderCircle className="spin" size={17} /> 주문 생성 중</>
+                : '주문 생성하기'}
             </button>
-            <small>주문 및 재고 처리는 다음 구현 단계에서 연결됩니다.</small>
+            <small>주문 생성 시 상품 재고가 확보되며 결제 전에는 취소할 수 있습니다.</small>
           </aside>
         </div>
       )}
     </main>
   )
+}
+
+function toOrderMessage(error: unknown) {
+  if (!(error instanceof OrderApiError)) {
+    return '주문을 생성하지 못했습니다. 다시 시도해주세요.'
+  }
+  switch (error.code) {
+    case 'EMPTY_CART':
+      return '장바구니가 비어 있습니다. 새로고침해주세요.'
+    case 'ORDER_STOCK_UNAVAILABLE':
+      return '주문 중 재고가 변경되었습니다. 수량을 다시 확인해주세요.'
+    default:
+      return error.message
+  }
 }
 
 function CartItemRow({

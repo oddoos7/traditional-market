@@ -115,6 +115,26 @@ public class Product extends BaseTimeEntity {
         this.status = status;
     }
 
+    public void decreaseStock(int quantity) {
+        if (quantity < 1 || status != ProductStatus.ON_SALE || stockQuantity < quantity) {
+            throw new IllegalArgumentException("차감할 상품 재고 수량이 올바르지 않습니다.");
+        }
+        stockQuantity -= quantity;
+        if (stockQuantity == 0) {
+            status = ProductStatus.SOLD_OUT;
+        }
+    }
+
+    public void restoreStock(int quantity) {
+        if (quantity < 1 || stockQuantity > MAX_STOCK_QUANTITY - quantity) {
+            throw new IllegalArgumentException("복원할 상품 재고 수량이 올바르지 않습니다.");
+        }
+        stockQuantity += quantity;
+        if (status == ProductStatus.SOLD_OUT) {
+            status = ProductStatus.ON_SALE;
+        }
+    }
+
     private static Store requireStore(Store store) {
         if (store == null) {
             throw new IllegalArgumentException("소속 점포는 필수입니다.");

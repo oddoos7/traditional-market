@@ -15,6 +15,8 @@ const SESSION_SCOPED_QUERY_NAMES = new Set([
   'my-store-review',
   'store-reviews',
   'cart',
+  'orders',
+  'order',
 ])
 
 interface AuthContextValue {

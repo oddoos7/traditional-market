@@ -48,6 +48,9 @@ import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProductFormPage } from './pages/ProductFormPage'
 import { CartPage } from './pages/CartPage'
 import { CartHeaderLink } from './components/CartHeaderLink'
+import { OrderHeaderLink } from './components/OrderHeaderLink'
+import { OrdersPage } from './pages/OrdersPage'
+import { OrderDetailPage } from './pages/OrderDetailPage'
 import type {
   Market,
   MarketDetail,
@@ -103,6 +106,14 @@ function App() {
         <Route
           path="cart"
           element={<RequireAuthRoute><CartPage /></RequireAuthRoute>}
+        />
+        <Route
+          path="orders"
+          element={<RequireAuthRoute><OrdersPage /></RequireAuthRoute>}
+        />
+        <Route
+          path="orders/:orderId"
+          element={<RequireAuthRoute><OrderDetailPage /></RequireAuthRoute>}
         />
         <Route
           path="login"
@@ -184,6 +195,7 @@ function SiteLayout() {
             ) : user ? (
               <>
                 <CartHeaderLink userId={user.id} />
+                <OrderHeaderLink />
                 <Link className="header-favorites" to="/favorites">
                   <Heart size={16} aria-hidden="true" />
                   <span>찜한 점포</span>

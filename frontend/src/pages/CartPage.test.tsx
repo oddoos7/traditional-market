@@ -6,7 +6,9 @@ import {
   updateCartItemQuantity,
 } from '../api/cartApi'
 import { useAuth } from '../auth/AuthContext'
+import { createOrder } from '../api/orderApi'
 import { createCart, createEmptyCart } from '../test/cartFixtures'
+import { createOrderDetail } from '../test/orderFixtures'
 import { renderWithProviders, screen, userEvent, waitFor } from '../test/render'
 import { CartPage } from './CartPage'
 
@@ -22,11 +24,17 @@ vi.mock('../auth/AuthContext', () => ({
   useAuth: vi.fn(),
 }))
 
+vi.mock('../api/orderApi', () => ({
+  createOrder: vi.fn(),
+  OrderApiError: class OrderApiError extends Error {},
+}))
+
 const mockedClearCart = vi.mocked(clearCart)
 const mockedGetCart = vi.mocked(getCart)
 const mockedRemoveCartItem = vi.mocked(removeCartItem)
 const mockedUpdateQuantity = vi.mocked(updateCartItemQuantity)
 const mockedUseAuth = vi.mocked(useAuth)
+const mockedCreateOrder = vi.mocked(createOrder)
 
 describe('CartPage', () => {
   beforeEach(() => {
@@ -34,6 +42,7 @@ describe('CartPage', () => {
     mockedGetCart.mockReset()
     mockedRemoveCartItem.mockReset()
     mockedUpdateQuantity.mockReset()
+    mockedCreateOrder.mockReset()
     mockedUseAuth.mockReturnValue({
       user: {
         id: 1,
@@ -74,5 +83,20 @@ describe('CartPage', () => {
 
     expect(await screen.findByRole('heading', { name: '장바구니가 비어 있어요' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /시장 둘러보기/ })).toHaveAttribute('href', '/')
+  })
+
+  it('주문을 생성하고 장바구니와 주문 쿼리를 갱신한다', async () => {
+    const user = userEvent.setup()
+    mockedGetCart.mockResolvedValue(createCart())
+    mockedCreateOrder.mockResolvedValue(createOrderDetail())
+
+    const { queryClient } = renderWithProviders(<CartPage />)
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    await user.click(await screen.findByRole('button', { name: '주문 생성하기' }))
+
+    await waitFor(() => expect(mockedCreateOrder).toHaveBeenCalledTimes(1))
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['cart'] })
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['orders'] })
   })
 })

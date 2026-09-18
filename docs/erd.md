@@ -1,6 +1,6 @@
 # 전통시장 ERD
 
-현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품과 장바구니로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V3` 마이그레이션입니다.
+현재 운영 스키마는 시장, 점포, 회원, 찜, 리뷰, 상품, 장바구니와 주문으로 구성됩니다. 실제 테이블 생성 기준은 Flyway의 `V1`~`V4` 마이그레이션입니다.
 
 ```mermaid
 erDiagram
@@ -13,6 +13,10 @@ erDiagram
     USERS ||--o| CARTS : owns
     CARTS ||--o{ CART_ITEMS : contains
     PRODUCTS ||--o{ CART_ITEMS : selected
+    USERS ||--o{ ORDERS : places
+    STORES ||--o{ ORDERS : receives
+    ORDERS ||--|{ ORDER_ITEMS : contains
+    PRODUCTS ||--o{ ORDER_ITEMS : snapshots
 
     MARKETS {
         BIGINT id PK
@@ -104,6 +108,32 @@ erDiagram
         DATETIME created_at "생성일시"
         DATETIME updated_at "수정일시"
     }
+
+    ORDERS {
+        BIGINT id PK
+        VARCHAR_50 order_number UK "외부 노출 주문번호"
+        BIGINT user_id FK "주문 회원"
+        BIGINT store_id FK "주문 점포"
+        VARCHAR_30 status "PENDING_PAYMENT, PAID, CANCELED"
+        INT total_item_count "총 주문 수량"
+        DECIMAL_18_2 total_amount "총 주문 금액"
+        DATETIME canceled_at "취소일시"
+        DATETIME created_at "주문일시"
+        DATETIME updated_at "수정일시"
+    }
+
+    ORDER_ITEMS {
+        BIGINT id PK
+        BIGINT order_id FK
+        BIGINT product_id FK
+        VARCHAR_100 product_name "주문 시점 상품명"
+        VARCHAR_500 product_image_url "주문 시점 이미지"
+        DECIMAL_12_2 unit_price "주문 시점 단가"
+        INT quantity "주문 수량, 1~99"
+        DECIMAL_18_2 line_amount "상품별 합계"
+        DATETIME created_at "생성일시"
+        DATETIME updated_at "수정일시"
+    }
 ```
 
 ## 설계 기준
@@ -129,3 +159,7 @@ erDiagram
 - 장바구니 안의 동일 상품은 한 행으로 관리하고 `uk_cart_items_cart_product` 유일 제약으로 중복 행을 방지합니다.
 - 장바구니 상품 수량은 1~99개로 제한하며, 서비스 계층에서 현재 상품 재고를 추가로 검증합니다.
 - 주문 단위를 명확하게 유지하기 위해 한 장바구니에는 한 점포의 상품만 담을 수 있습니다.
+- 주문은 사용자와 점포를 참조하고, 상품명·이미지·단가를 주문 상품에 스냅샷으로 저장하여 이후 상품 정보가 바뀌어도 주문 당시 내역을 유지합니다.
+- 주문 생성 시 상품 행을 ID 오름차순으로 비관적 잠금한 뒤 최신 재고를 확인하고 차감하여 동시 주문의 초과 판매를 방지합니다.
+- 재고가 0이 되면 상품 상태를 `SOLD_OUT`으로 바꾸고, 결제 대기 주문을 취소해 재고가 복원되면 다시 `ON_SALE`로 전환합니다.
+- 현재 주문 생성 상태는 `PENDING_PAYMENT`이며, 결제 전 취소만 허용합니다. `PAID` 전환은 토스페이먼츠 결제 승인 단계에서 연결합니다.
