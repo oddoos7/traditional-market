@@ -1,18 +1,62 @@
 # 우리동네 전통시장
 
-React 프론트엔드와 Spring Boot 백엔드로 구성한 전통시장 프로젝트입니다.
+[![CI](https://github.com/oddoos7/traditional-market/actions/workflows/ci.yml/badge.svg)](https://github.com/oddoos7/traditional-market/actions/workflows/ci.yml)
+
+시장 탐색부터 점포·상품 조회, 장바구니, 주문과 테스트 결제까지 구현한 풀스택 전통시장 서비스입니다. React SPA와 Spring Boot REST API를 기반으로 하며 동시성 제어, 결제 멱등성, Flyway 마이그레이션과 자동 테스트를 포함합니다.
+
+## 주요 기능
+
+- 시장·점포·상품 검색, 필터, 정렬과 상세 조회
+- 카카오 지도 기반 시장 위치 및 주소 검색 연동
+- 세션 인증, CSRF 보호와 관리자 권한 분리
+- 점포 찜과 회원별 리뷰 등록·수정·삭제
+- 장바구니, 주문 생성과 비관적 잠금 기반 재고 차감·복구
+- 토스페이먼츠 테스트 승인·전액 취소·웹훅·멱등성 처리
+- Swagger API 문서, 요청 추적 로그와 GitHub Actions CI
+- Docker 기반 React·Spring Boot·MySQL 운영 배포
+
+## 기술 스택
+
+| 구분 | 기술 |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite, TanStack Query, Vitest |
+| Backend | Java 17, Spring Boot 4, Spring MVC, Spring Security, Spring Data JPA |
+| Database | MySQL 8.4, H2, Flyway |
+| Payment·Map | Toss Payments test API, Kakao Maps JavaScript API |
+| Infra | Docker Compose, Nginx, GitHub Actions, Swagger UI |
+
+## 구성도
+
+```mermaid
+flowchart LR
+    U[브라우저] -->|HTTP/HTTPS| N[Nginx + React]
+    N -->|/api 프록시| B[Spring Boot]
+    B --> D[(MySQL)]
+    B --> T[Toss Payments API]
+    U --> K[Kakao Maps API]
+```
 
 ## 프로젝트 구조
 
 ```text
 전통시장/
-├─ frontend/  React + TypeScript + Vite
-└─ backend/   Java 17 + Spring Boot + Gradle
+├─ frontend/          React + TypeScript + Vite + Nginx
+├─ backend/           Java 17 + Spring Boot + Gradle
+├─ docs/              ERD와 배포 문서
+├─ .github/workflows/ GitHub Actions CI
+├─ compose.yaml       개발용 MySQL
+└─ compose.prod.yaml  운영용 전체 서비스
 ```
+
+관련 문서:
+
+- [데이터베이스 ERD](docs/erd.md)
+- [Docker 운영 배포 가이드](docs/deployment.md)
+- 실행 후 [Swagger UI](http://localhost:8080/swagger-ui.html)
 
 ## 프론트엔드 실행
 
-Node.js 18 이상이 필요합니다.
+Node.js 22 사용을 권장합니다.
 
 ```bash
 cd frontend
@@ -329,6 +373,25 @@ POST /api/auth/logout
 - 누락되거나 잘못된 CSRF 토큰: HTTP 403, `INVALID_CSRF_TOKEN`
 - 인증된 사용자의 권한 부족: HTTP 403, `ACCESS_DENIED`
 
+## 운영 배포
+
+운영 배포는 `frontend → Nginx`, `backend → Spring Boot`, `database → MySQL`로 구성됩니다. 프로젝트 루트에서 운영 환경변수 파일을 만든 뒤 전체 서비스를 시작합니다.
+
+```powershell
+Copy-Item .env.production.example .env.production
+# .env.production의 DB 비밀번호와 필요한 API 키를 변경
+
+docker compose --env-file .env.production -f compose.prod.yaml config
+docker compose --env-file .env.production -f compose.prod.yaml up -d --build
+docker compose --env-file .env.production -f compose.prod.yaml ps
+```
+
+브라우저에서는 `http://localhost` 또는 배포 도메인으로 접속하고, 상태 확인은 `GET /api/health`를 사용합니다. MySQL 포트와 백엔드 포트는 호스트에 직접 공개하지 않고 Nginx의 `/api` 프록시를 통해서만 접근합니다.
+
+카카오·토스의 `VITE_` 변수는 프론트엔드 빌드 시 정적 번들에 포함되는 공개 키입니다. 값을 변경하면 `frontend` 이미지를 다시 빌드해야 합니다. `TOSS_PAYMENTS_SECRET_KEY`와 DB 비밀번호는 서버 환경에만 보관해야 합니다.
+
+실제 서버 준비, 최초 관리자 생성, HTTPS, 업데이트와 장애 확인 절차는 [배포 가이드](docs/deployment.md)에 정리했습니다.
+
 ## Swagger·로그·CI
 
 백엔드를 실행하면 다음 주소에서 OpenAPI 문서와 Swagger UI를 확인할 수 있습니다.
@@ -343,14 +406,18 @@ http://localhost:8080/v3/api-docs
 - 모든 HTTP 응답에는 `X-Request-Id`가 포함됩니다. 클라이언트가 안전한 형식의 요청 ID를 보내면 유지하고, 없거나 올바르지 않으면 서버가 UUID를 발급합니다.
 - 요청 로그에는 요청 ID, HTTP 메서드, 경로, 응답 상태와 처리 시간이 기록됩니다. 요청 본문, 비밀번호, 세션 쿠키와 결제 키는 기록하지 않습니다.
 - 예상하지 못한 서버 오류는 전체 예외를 서버 로그에 기록하되 클라이언트에는 `INTERNAL_SERVER_ERROR` 표준 응답만 반환합니다.
-- `.github/workflows/ci.yml`은 `main` 브랜치 push와 pull request에서 Java 17 백엔드 전체 테스트, Node.js 22 프론트엔드 테스트와 프로덕션 빌드를 자동 실행합니다.
+- `.github/workflows/ci.yml`은 `main` 브랜치 push와 pull request에서 Java 17 백엔드 전체 테스트, Node.js 22 프론트엔드 테스트·프로덕션 빌드, 운영 Compose 검증과 Docker 이미지 빌드를 자동 실행합니다.
 
 ## 빌드 및 테스트
 
 ```bash
 cd frontend
+npm ci
+npm test
 npm run build
 
 cd ../backend
-gradlew.bat test
+./gradlew clean test bootJar
 ```
+
+Windows PowerShell에서는 마지막 명령을 `.\gradlew.bat clean test bootJar`로 실행합니다. OneDrive 한글 경로에서 Vitest나 Gradle 프로세스가 비정상 종료되면 프로젝트를 영문 경로로 옮기거나 `subst`로 임시 영문 드라이브를 연결해 실행합니다.
